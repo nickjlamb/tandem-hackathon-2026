@@ -1,0 +1,96 @@
+# ── macOS ─────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# ── Editors / IDEs ────────────────────────────────────
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Environment files / secrets ───────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+service-account*.json
+secrets/
+.secrets
+.anthropic
+.openai
+
+# ── Node / Next.js ────────────────────────────────────
+node_modules/
+.next/
+out/
+.turbo/
+.vercel/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+.eslintcache
+next-env.d.ts
+*.tsbuildinfo
+
+# ── Python ────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+ENV/
+.Python
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+pip-wheel-metadata/
+
+# ── Build artefacts ───────────────────────────────────
+build/
+dist/
+*.egg
+*.whl
+*.log
+coverage/
+
+# ── Local caches / tooling state ──────────────────────
+.cache/
+.parcel-cache/
+.claude/settings.local.json
+tmp/
+temp/
+*.tmp
+*.bak
+
+# ── Local data (never commit real patient data) ───────
+data/raw/
+*.sqlite
+*.db
+
+# ── Pre-hackathon prep materials (kept local only) ────
+tandem_hackathon_cheatsheet.pdf
+tandem_hackathon_demo_skeleton_v2.pptx
+workflow.png
+
+# ── Sandbox leftovers (safe to delete this folder) ────
+_to_delete/

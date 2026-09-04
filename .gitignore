@@ -94,3 +94,6 @@ workflow.png
 
 # ── Sandbox leftovers (safe to delete this folder) ────
 _to_delete/
+
+# ── Office lock files ─────────────────────────────────
+~$*

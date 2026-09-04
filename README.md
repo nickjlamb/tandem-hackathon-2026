@@ -2,7 +2,7 @@
 
 Repository for the NXGN × Tandem Health "Automate Admin, Land a Role" hackathon (5 September 2026).
 
-> Working docs live in [`docs/`](docs/): [problem](docs/problem.md) · [architecture](docs/architecture.md) · [evaluation](docs/evaluation.md).
+> Start with [`docs/strategy.md`](docs/strategy.md). Working docs: [problem](docs/problem.md) · [architecture](docs/architecture.md) · [evaluation](docs/evaluation.md). Claude Code build guidance: [`CLAUDE.md`](CLAUDE.md).
 
 ## Problem
 

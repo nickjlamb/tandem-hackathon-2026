@@ -16,7 +16,14 @@ Write the test cases before the code. Aim for 5–10 gold cases; a demo that run
 - [ ] Output schema (JSON / fields):
 - [ ] Required vs optional fields:
 - [ ] Allowed values / code lists:
-- [ ] Example of a correct output:
+- [ ] Example of a correct output, e.g.
+  ```json
+  { "complete": false, "missing_fields": ["date_of_birth"], "route": "request_information", "requires_human_review": false }
+  ```
+- [ ] Example of a correct escalation, e.g.
+  ```json
+  { "requires_human_review": true, "reason": "conflicting_patient_information" }
+  ```
 
 ## Normal cases
 - [ ] Typical, complete input → correct output, no escalation

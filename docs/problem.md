@@ -1,6 +1,26 @@
 # Problem
 
 Fill this in first. Keep it to one screen. If we can't state the pain in numbers, we don't understand it yet.
+Scoring rubric and interview questions are in [`strategy.md`](strategy.md).
+
+## Candidate shortlist (score 1–5; weights ×2 for the first three; max 50)
+| Candidate | Real pain ×2 | Admin removable ×2 | Demoable ×2 | Distinct | Measurable | Evaluable | Actionable | Total |
+|-----------|--------------|--------------------|-------------|----------|------------|-----------|------------|-------|
+| A.        |              |                    |             |          |            |           |            |       |
+| B.        |              |                    |             |          |            |           |            |       |
+| C.        |              |                    |             |          |            |           |            |       |
+- [ ] Veto 1 — just generating text? → what is the downstream action?
+- [ ] Veto 2 — depends on infrastructure we can't demo? → mock or drop
+- [ ] Veto 3 — clinician can say in one sentence why they'd want it?
+
+## One-line problem statement
+```
+TODAY:          [clinician] has to ______.
+OUR SYSTEM:     automatically ______.
+CLINICIAN ONLY: ______.
+RESULT:         ______.
+```
+**Demo sentence (write before building):** "At 15:55 we'll show a clinician doing X today, then giving our system Y, after which they only need to do Z."
 
 ## User
 - [ ] Who: (e.g. GP, ward junior doctor, practice admin, nurse)

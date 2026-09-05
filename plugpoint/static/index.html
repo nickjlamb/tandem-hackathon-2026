@@ -130,7 +130,7 @@
 
 <footer>
   <section class="card">
-    <h2>Audit trail
+    <h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button class="small ghost" id="auditToggle" onclick="toggleAudit()" style="text-transform:none;letter-spacing:0">▾ Hide</button> Audit trail
       <span class="legend" style="margin-left:10px">
         <span class="actor AI">AI</span> language extraction &nbsp;
         <span class="actor RULE">RULE</span> deterministic code &nbsp;
@@ -139,8 +139,10 @@
         <span class="actor SYSTEM">SYSTEM</span> tracker
       </span>
     </h2>
+    <div id="auditBody">
     <label style="display:inline-flex;gap:6px;align-items:center;margin:0 0 6px;font-size:12px"><input type="checkbox" id="auditMine" onchange="renderAudit()" style="width:auto"> Show only the selected patient's loop</label>
     <div class="audit" id="audit"></div>
+    </div>
   </section>
 </footer>
 
@@ -165,6 +167,7 @@ async function init() {
   $('clinician').innerHTML = META.clinicians.map(c => `<option value="${esc(c.name)}|${c.role}">${esc(c.name)} · ${c.role}</option>`).join('');
   loadSample();
   STATE = await api('/api/state', null, 'GET');
+  try { if (localStorage.getItem('pp.auditHidden') === '1') toggleAudit(); } catch (e) {}
   render();
 }
 
@@ -388,6 +391,12 @@ function renderAlerts() {
   }).join('');
 }
 
+function toggleAudit() {
+  const body = $('auditBody'), hidden = !body.hidden;
+  body.hidden = hidden;
+  $('auditToggle').textContent = hidden ? '▸ Show' : '▾ Hide';
+  try { localStorage.setItem('pp.auditHidden', hidden ? '1' : '0'); } catch (e) {}
+}
 function renderAudit() {
   const el = $('audit');
   const mine = $('auditMine')?.checked && ACTIVE_LOOP;

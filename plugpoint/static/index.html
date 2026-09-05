@@ -167,7 +167,9 @@ async function init() {
   $('clinician').innerHTML = META.clinicians.map(c => `<option value="${esc(c.name)}|${c.role}">${esc(c.name)} · ${c.role}</option>`).join('');
   loadSample();
   STATE = await api('/api/state', null, 'GET');
-  try { if (localStorage.getItem('pp.auditHidden') === '1') toggleAudit(); } catch (e) {}
+  let hidden = true;  // hidden by default; a viewer's explicit choice is remembered
+  try { hidden = localStorage.getItem('pp.auditHidden') !== '0'; } catch (e) {}
+  if (hidden) toggleAudit();
   render();
 }
 

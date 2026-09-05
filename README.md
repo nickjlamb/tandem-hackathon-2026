@@ -141,7 +141,7 @@ Sample A → **Extract action plan** → 5/5 checks → **Approve & action plan*
 
 ### 2 · The system refuses to guess
 
-<img src="docs/images/escalation.png" alt="Conflicting follow-up intervals: clinician decision required" width="520">
+<img src="docs/images/escalation.png" alt="Conflicting follow-up intervals: clinician decision required" width="480">
 
 Sample B's note says "see in 2 weeks" and, later, "review in 3 months". Nothing is ordered or booked; the clinician chooses. Sample C has a biopsy with no indication (type one, or untick it). Sample D books follow-up before a biopsy can be back — the rule suggests the earliest workable interval, and checks the clinician's answer too.
 

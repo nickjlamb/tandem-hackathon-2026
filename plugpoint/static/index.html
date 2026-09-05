@@ -100,7 +100,7 @@
   <section class="card">
     <h2>1 · Clinic note <span class="chip">from Tandem</span></h2>
     <label>Sample note</label>
-    <select id="sample" onchange="loadSample()"></select>
+    <select id="sample" onchange="loadSample(true)"></select>
     <div class="kv mt" id="patientBox"></div>
     <label>Note author</label>
     <select id="clinician"></select>
@@ -166,8 +166,11 @@ async function init() {
   render();
 }
 
-function loadSample() {
+async function loadSample(userChanged = false) {
   const s = META.samples.find(x => x.id === $('sample').value);
+  if (userChanged) {  // a new sample starts a clean demo: clear plan, tracker, alerts and audit
+    STATE = await api('/api/reset', {}); ACTIVE_LOOP = null; ADDED = []; EDITS = {};
+  }
   $('note').value = s.note;
   $('clinician').value = `${s.clinician.name}|${s.clinician.role}`;
   const p = META.patients.find(p => p.id === s.patient_id);
@@ -175,6 +178,7 @@ function loadSample() {
   $('patientBox').dataset.pid = p.id;
   $('extractErr').textContent = '';
   $('extractHint').textContent = META.llm === 'claude' ? 'Claude, schema-constrained' : 'offline fixture (set ANTHROPIC_API_KEY for free text)';
+  if (userChanged) render();
 }
 
 async function extract() {

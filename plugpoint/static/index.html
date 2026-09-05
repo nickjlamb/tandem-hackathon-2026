@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PlugPoint · close the loop after clinic</title>
+<style>
+  :root{
+    --bg:#f4f6f9;--card:#fff;--ink:#1c2430;--muted:#66717f;--line:#e2e7ee;
+    --ai:#6b4fbb;--rule:#1f8a5b;--human:#c77d0a;--api:#1f5fbf;--sys:#66717f;
+    --ok:#1f8a5b;--warn:#c77d0a;--bad:#c0392b;--accent:#1f5fbf;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+  header{display:flex;align-items:center;gap:16px;padding:12px 20px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+  header h1{font-size:18px;margin:0;letter-spacing:-.2px}
+  header h1 span{color:var(--muted);font-weight:400;font-size:13px;margin-left:8px}
+  .spacer{flex:1}
+  .badge{font-size:12px;padding:3px 9px;border-radius:999px;background:#eef2f7;color:var(--muted);border:1px solid var(--line)}
+  .badge.date{background:#fff7e6;color:#8a5a00;border-color:#f3dfb3;font-weight:600}
+  main{display:grid;grid-template-columns:minmax(300px,1fr) minmax(360px,1.3fr) minmax(320px,1.1fr);gap:16px;padding:16px 20px}
+  section.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  section.card h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 10px}
+  label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+  select,textarea,input[type=date]{width:100%;font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink)}
+  textarea{min-height:230px;resize:vertical;line-height:1.5}
+  button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--ink)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  button.primary:disabled{opacity:.45;cursor:not-allowed}
+  button.small{padding:4px 9px;font-size:12px}
+  button.ghost{background:transparent}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .mt{margin-top:12px}
+  .muted{color:var(--muted)}
+  .pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;border:1px solid transparent;white-space:nowrap}
+  .pill.proposed{background:#eef2f7;color:var(--muted)}
+  .pill.result_awaited{background:#e8f0fc;color:var(--api);border-color:#c9dbf7}
+  .pill.result_received{background:#e6f5ee;color:var(--ok);border-color:#bfe5d2}
+  .pill.reviewed,.pill.closed{background:#e6f5ee;color:var(--ok)}
+  .pill.declined{background:#f3f3f3;color:var(--muted);text-decoration:line-through}
+  .pill.open{background:#e8f0fc;color:var(--api);border-color:#c9dbf7}
+  .pill.awaiting_approval{background:#fff3e0;color:var(--human);border-color:#f5d9a8}
+  .pill.needs_review{background:#fdecea;color:var(--bad);border-color:#f5c2bd}
+  .pill.overdue{background:#fdecea;color:var(--bad);border-color:#f5c2bd}
+  .pill.at_risk{background:#fff3e0;color:var(--human);border-color:#f5d9a8}
+  .pill.booked{background:#e6f5ee;color:var(--ok);border-color:#bfe5d2}
+  .chip{display:inline-block;font-size:11px;padding:1px 7px;border-radius:5px;background:#eef2f7;color:var(--muted)}
+  .actor{display:inline-block;min-width:58px;text-align:center;font-size:11px;font-weight:700;padding:1px 6px;border-radius:5px;color:#fff}
+  .actor.AI{background:var(--ai)}.actor.RULE{background:var(--rule)}.actor.HUMAN{background:var(--human)}.actor.API{background:var(--api)}.actor.SYSTEM{background:var(--sys)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:left;padding:6px 6px;border-bottom:1px solid var(--line)}
+  td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+  .checks li{list-style:none;padding:4px 0;display:flex;gap:8px;align-items:flex-start}
+  .checks{padding:0;margin:0 0 6px}
+  .ic{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex:none;margin-top:1px}
+  .ic.ok{background:var(--ok)}.ic.block{background:var(--bad)}.ic.warn{background:var(--warn)}.ic.info{background:var(--sys)}
+  .loop{border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-bottom:10px;background:#fbfcfd}
+  .loop.active{border-color:var(--accent);box-shadow:0 0 0 2px #dbe7fb}
+  .loop h3{margin:0;font-size:14px}
+  .item{display:flex;gap:8px;align-items:center;padding:5px 0;border-top:1px dashed var(--line);font-size:13px;flex-wrap:wrap}
+  .item .name{flex:1;min-width:120px}
+  .alert{border-left:4px solid var(--bad);background:#fff8f7;padding:8px 10px;border-radius:6px;margin-bottom:8px}
+  .alert.appointment_at_risk{border-left-color:var(--warn);background:#fffaf0}
+  .alert.appointment_passed{border-left-color:var(--api);background:#f3f7fd}
+  .alert b{display:block;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .audit{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;max-height:280px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px;background:#fff}
+  .audit div{display:flex;gap:10px;padding:2px 0;border-bottom:1px solid #f1f4f8}
+  .audit .d{color:var(--muted);flex:none;width:80px}
+  .audit .lid{color:var(--muted);flex:none;width:36px}
+  .empty{color:var(--muted);font-style:italic;padding:10px 0}
+  .pack{background:#f3f7fd;border:1px solid #c9dbf7;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:13px}
+  .err{color:var(--bad);font-size:13px;margin-top:8px}
+  .legend{font-size:11px;color:var(--muted)}
+  footer{padding:0 20px 24px}
+  .decision{background:#fff8f7;border:1px solid #f5c2bd;border-radius:8px;padding:10px 12px;margin-top:10px}
+  .decision h4{margin:0 0 6px;font-size:13px;color:var(--bad)}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:13px}
+  .kv span:first-child{color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <h1>PlugPoint <span>closes the loop after clinic</span></h1>
+  <span class="badge date" id="today">—</span>
+  <span class="badge" id="llmmode">—</span>
+  <div class="spacer"></div>
+  <span class="legend">Simulated time:</span>
+  <button class="small" onclick="advance(7)">+1 week</button>
+  <button class="small" onclick="advance(14)">+2 weeks</button>
+  <button class="small" onclick="advance(28)">+4 weeks</button>
+  <button class="small ghost" onclick="resetAll()">Reset demo</button>
+</header>
+
+<main>
+  <!-- ---------------------------------------------------------- column 1 -->
+  <section class="card">
+    <h2>1 · Clinic note <span class="chip">from Tandem</span></h2>
+    <label>Sample note</label>
+    <select id="sample" onchange="loadSample()"></select>
+    <div class="kv mt" id="patientBox"></div>
+    <label>Note author</label>
+    <select id="clinician"></select>
+    <label>Consultation note / dictated plan</label>
+    <textarea id="note"></textarea>
+    <div class="row mt">
+      <button class="primary" id="extractBtn" onclick="extract()">Extract action plan</button>
+      <span class="muted" id="extractHint"></span>
+    </div>
+    <div class="err" id="extractErr"></div>
+  </section>
+
+  <!-- ---------------------------------------------------------- column 2 -->
+  <section class="card">
+    <h2>2 · Action plan · <span style="color:var(--human)">clinician approval</span></h2>
+    <div id="plan"><div class="empty">Extract a plan from a note to begin.</div></div>
+  </section>
+
+  <!-- ---------------------------------------------------------- column 3 -->
+  <section class="card">
+    <h2>3 · Tracker <span class="chip">nothing falls through</span></h2>
+    <div id="alerts"></div>
+    <div id="loops"><div class="empty">No open loops yet.</div></div>
+  </section>
+</main>
+
+<footer>
+  <section class="card">
+    <h2>Audit trail
+      <span class="legend" style="margin-left:10px">
+        <span class="actor AI">AI</span> language extraction &nbsp;
+        <span class="actor RULE">RULE</span> deterministic code &nbsp;
+        <span class="actor HUMAN">HUMAN</span> clinician &nbsp;
+        <span class="actor API">API</span> downstream system (mocked) &nbsp;
+        <span class="actor SYSTEM">SYSTEM</span> tracker
+      </span>
+    </h2>
+    <div class="audit" id="audit"></div>
+  </section>
+</footer>
+
+<script>
+let META = null, STATE = null, ACTIVE_LOOP = null;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = iso => iso ? new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}) : '—';
+const pill = (s, extra='') => `<span class="pill ${s} ${extra}">${s.replace(/_/g,' ')}</span>`;
+
+async function api(path, body, method='POST') {
+  const r = await fetch(path, {method, headers: {'Content-Type':'application/json'}, body: body ? JSON.stringify(body) : undefined});
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.detail || r.statusText);
+  return j;
+}
+
+async function init() {
+  META = await api('/api/meta', null, 'GET');
+  $('llmmode').textContent = 'extraction: ' + META.llm;
+  $('sample').innerHTML = META.samples.map(s => `<option value="${s.id}">${esc(s.label)}</option>`).join('');
+  $('clinician').innerHTML = META.clinicians.map(c => `<option value="${esc(c.name)}|${c.role}">${esc(c.name)} · ${c.role}</option>`).join('');
+  loadSample();
+  STATE = await api('/api/state', null, 'GET');
+  render();
+}
+
+function loadSample() {
+  const s = META.samples.find(x => x.id === $('sample').value);
+  $('note').value = s.note;
+  $('clinician').value = `${s.clinician.name}|${s.clinician.role}`;
+  const p = META.patients.find(p => p.id === s.patient_id);
+  $('patientBox').innerHTML = `<span>Patient</span><b>${esc(p.name)}</b><span>Details</span><span>${p.age}${p.sex} · ${p.hospital_no} · ${p.clinic} clinic</span>`;
+  $('patientBox').dataset.pid = p.id;
+  $('extractErr').textContent = '';
+  $('extractHint').textContent = META.llm === 'claude' ? 'Claude, schema-constrained' : 'offline fixture (set ANTHROPIC_API_KEY for free text)';
+}
+
+async function extract() {
+  const [name, role] = $('clinician').value.split('|');
+  const sampleId = $('sample').value;
+  const s = META.samples.find(x => x.id === sampleId);
+  const note = $('note').value;
+  $('extractBtn').disabled = true; $('extractBtn').textContent = 'Extracting…'; $('extractErr').textContent = '';
+  try {
+    const r = await api('/api/plan', {patient_id: $('patientBox').dataset.pid, note, clinician: {name, role},
+                                       sample_id: note.trim() === s.note.trim() ? sampleId : null});
+    STATE = r.state; ACTIVE_LOOP = r.loop.id; render();
+  } catch (e) { $('extractErr').textContent = e.message; }
+  $('extractBtn').disabled = false; $('extractBtn').textContent = 'Extract action plan';
+}
+
+async function approve(loopId) {
+  const boxes = [...document.querySelectorAll(`#plan input[data-item]`)];
+  const approved = boxes.filter(b => b.checked).map(b => b.dataset.item);
+  const fuBox = document.querySelector('#plan input[data-fu]');
+  const intervalSel = document.querySelector('#plan select[data-interval]');
+  try {
+    const r = await api('/api/approve', {loop_id: loopId, approved_investigations: approved,
+      approve_follow_up: fuBox ? fuBox.checked : false,
+      interval_weeks: intervalSel ? parseInt(intervalSel.value) : null});
+    STATE = r.state; render();
+  } catch (e) { $('planErr').textContent = e.message; }
+}
+
+async function simulateResult(loopId, itemId) { STATE = await api('/api/simulate/result', {loop_id: loopId, item_id: itemId}); render(); }
+async function advance(days) { STATE = await api(`/api/simulate/advance?days=${days}`, {}); render(); }
+async function resetAll() { STATE = await api('/api/reset', {}); ACTIVE_LOOP = null; render(); }
+async function action(kind, loopId, extra={}) {
+  try { STATE = await api(`/api/action/${kind}`, {loop_id: loopId, actor: currentClinician(), ...extra}); render(); }
+  catch (e) { alert(e.message); }
+}
+function currentClinician() { return $('clinician').value.split('|')[0]; }
+
+function render() {
+  $('today').textContent = 'Today: ' + fmt(STATE.today);
+  renderPlan(); renderLoops(); renderAlerts(); renderAudit();
+}
+
+function renderPlan() {
+  const loop = STATE.loops.find(l => l.id === ACTIVE_LOOP) || STATE.loops[STATE.loops.length - 1];
+  if (!loop) { $('plan').innerHTML = '<div class="empty">Extract a plan from a note to begin.</div>'; return; }
+  ACTIVE_LOOP = loop.id;
+  const gate = loop.gate, blocked = gate.requires_human_review;
+  const pending = loop.status === 'awaiting_approval' || loop.status === 'needs_review';
+  const icon = s => s === 'block' ? 'block' : s === 'warn' ? 'warn' : 'info';
+  let checks = gate.flags.length
+    ? gate.flags.map(f => `<li><span class="ic ${icon(f.severity)}">${f.severity === 'block' ? '!' : f.severity === 'warn' ? '?' : 'i'}</span><span>${esc(f.message)}</span></li>`).join('')
+    : '';
+  const passedCount = 5 - gate.flags.filter(f => f.severity === 'block').length;
+  checks = `<li><span class="ic ok">✓</span><span>${passedCount} of 5 deterministic checks passed${blocked ? '' : ' — routine plan'}</span></li>` + checks;
+
+  const rows = loop.items.map(i => `
+    <tr>
+      <td>${pending ? `<input type="checkbox" data-item="${i.id}" ${i.reason ? 'checked' : 'disabled'}>` : pill(i.status)}</td>
+      <td><b>${esc(i.name)}</b><br><span class="chip">${i.category}</span> <span class="chip">${i.urgency}</span></td>
+      <td>${i.reason ? esc(i.reason) : '<span style="color:var(--bad)">No indication stated — cannot be ordered</span>'}<br><span class="muted" style="font-size:11px">“${esc(i.evidence)}”</span></td>
+    </tr>`).join('');
+
+  const fu = loop.plan.follow_up;
+  const cands = fu ? [...new Set(fu.interval_candidates_weeks)].sort((a,b)=>a-b) : [];
+  let fuHtml = '<div class="muted">No follow-up in the note.</div>';
+  if (fu) {
+    const intervalCtl = pending && (cands.length !== 1 || gate.reasons.includes('follow_up_before_results'))
+      ? `<select data-interval style="width:auto;display:inline-block">${(cands.length ? cands : [2,4,6,8,12]).map(w => `<option value="${w}">${w} weeks${cands.length ? ' (in note)' : ''}</option>`).join('')}${cands.length ? [4,6,8,12].filter(w => !cands.includes(w)).map(w => `<option value="${w}">${w} weeks (other)</option>`).join('') : ''}</select>`
+      : `<b>${loop.follow_up_weeks} weeks</b>`;
+    fuHtml = `<div class="row">${pending ? `<input type="checkbox" data-fu checked>` : ''}
+      <span>Follow-up in ${intervalCtl} with <b>${loop.reviewer_role}</b>${fu.purpose ? ` · <span class="muted">${esc(fu.purpose)}</span>` : ''}</span></div>
+      <div class="muted" style="font-size:11px;margin-left:22px">“${esc(fu.evidence)}”</div>`;
+  }
+
+  let decision = '';
+  if (pending && blocked) {
+    decision = `<div class="decision"><h4>Clinician decision required — the system will not guess</h4>
+      <div>${gate.reasons.map(r => `<span class="chip">${r.replace(/_/g,' ')}</span>`).join(' ')}</div>
+      <div class="muted mt" style="font-size:12px">Resolve above (choose an interval / untick items without an indication), then approve. Nothing is ordered or booked until you do.</div></div>`;
+  }
+
+  let after = '';
+  if (!pending) {
+    const appt = loop.appointment;
+    after = `<div class="pack"><b>Approved by ${esc(loop.approved_by.name)} on ${fmt(loop.approved_on)}.</b>
+      ${appt ? `Follow-up ${fmt(appt.date)} with ${esc(appt.reviewer_name)} (${appt.clinic}) ${pill(appt.status)}` : 'No follow-up booked.'}
+      <div class="muted" style="font-size:12px;margin-top:4px">Orders sent, appointment booked, patient messaged, EPR updated — see audit trail. Clinician interaction: 1 approval.</div></div>`;
+    const received = loop.items.filter(i => i.result);
+    if (received.length) after += `<div class="pack"><b>Pre-clinic pack</b> (auto-assembled for ${esc(appt ? appt.reviewer_name : 'reviewer')}):<br>` +
+      received.map(i => `• ${esc(i.name)} (${fmt(i.result_on)}): ${esc(i.result)}`).join('<br>') + `<br>• Previous plan: ${esc(loop.plan.follow_up?.purpose || '')}</div>`;
+  }
+
+  $('plan').innerHTML = `
+    <div class="row"><b>${esc(loop.patient.name)}</b> <span class="muted">${loop.patient.age}${loop.patient.sex} · ${loop.patient.clinic}</span> ${pill(loop.status)} <span class="chip">${loop.id}</span></div>
+    <ul class="checks mt">${checks}</ul>
+    <table><thead><tr><th style="width:34px"></th><th>Investigation</th><th>Clinical indication (from note)</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="mt">${fuHtml}</div>
+    ${decision}
+    ${pending ? `<div class="row mt"><button class="primary" onclick="approve('${loop.id}')">Approve &amp; action plan</button><span class="muted" style="font-size:12px">One click: order · book · message · record · track</span></div><div class="err" id="planErr"></div>` : after}`;
+}
+
+function renderLoops() {
+  if (!STATE.loops.length) { $('loops').innerHTML = '<div class="empty">No open loops yet.</div>'; return; }
+  $('loops').innerHTML = STATE.loops.slice().reverse().map(l => {
+    const appt = l.appointment;
+    const items = l.items.map(i => `
+      <div class="item">
+        <span class="name">${esc(i.name)}</span>
+        ${pill(i.status)} ${i.overdue ? pill('overdue') : ''}
+        ${i.status === 'result_awaited' ? `<span class="muted" style="font-size:11px">due ${fmt(i.expected_by)}</span>
+           <button class="small" onclick="simulateResult('${l.id}','${i.id}')">simulate result</button>` : ''}
+        ${i.status === 'result_received' ? `<span class="muted" style="font-size:11px">in ${fmt(i.result_on)}</span>` : ''}
+      </div>`).join('');
+    return `<div class="loop ${l.id === ACTIVE_LOOP ? 'active' : ''}" onclick="ACTIVE_LOOP='${l.id}';render()">
+      <div class="row"><h3>${esc(l.patient.name)}</h3> ${pill(l.status)} <span class="chip">${l.id}</span><div class="spacer"></div><span class="muted" style="font-size:11px">opened ${fmt(l.created)}</span></div>
+      ${items}
+      <div class="item"><span class="name">Follow-up</span>${appt ? `<span>${fmt(appt.date)} · ${esc(appt.reviewer_name)}</span> ${pill(appt.status)}` : '<span class="muted">not booked</span>'}</div>
+      ${l.status === 'open' && appt && STATE.today >= appt.date ? `<div class="row mt"><button class="small" onclick="event.stopPropagation();action('close','${l.id}')">Results reviewed with patient — close loop</button></div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderAlerts() {
+  const ns = STATE.notifications;
+  if (!ns.length) { $('alerts').innerHTML = ''; return; }
+  $('alerts').innerHTML = ns.map(n => {
+    const loop = STATE.loops.find(l => l.id === n.loop_id);
+    const defaultDate = (() => { const d = new Date(STATE.today + 'T00:00:00'); d.setDate(d.getDate() + 14); return d.toISOString().slice(0,10); })();
+    const btns = n.actions.map(a => {
+      if (a === 'chase') return `<button class="small" onclick="action('chase','${n.loop_id}',{item_id:'${n.item_id}'})">Chase department</button>`;
+      if (a === 'acknowledge') return `<button class="small ghost" onclick="action('acknowledge','${n.loop_id}',{notification_id:'${n.id}'})">Acknowledge</button>`;
+      if (a === 'keep') return `<button class="small ghost" onclick="action('keep','${n.loop_id}')">Keep appointment</button>`;
+      if (a === 'close') return `<button class="small" onclick="action('close','${n.loop_id}')">Seen &amp; reviewed — close loop</button>`;
+      if (a === 'rebook') return `<span class="row" style="gap:4px"><span class="muted" style="font-size:11px">results expected by</span><input type="date" id="rb-${n.id}" value="${defaultDate}" style="width:auto;padding:3px 6px;font-size:12px">
+          <button class="small" onclick="action('rebook','${n.loop_id}',{results_expected: document.getElementById('rb-${n.id}').value})">Rebook after results</button></span>`;
+      return '';
+    }).join(' ');
+    return `<div class="alert ${n.kind}"><b>Alert · ${n.kind.replace(/_/g,' ')} · owner ${esc(n.owner)}</b>
+      <div><b style="display:inline;text-transform:none;color:var(--ink);letter-spacing:0">${esc(n.patient_name)}</b>: ${esc(n.message)}</div>
+      <div class="row" style="margin-top:6px">${btns}</div></div>`;
+  }).join('');
+}
+
+function renderAudit() {
+  const el = $('audit');
+  el.innerHTML = STATE.audit.slice().reverse().map(e =>
+    `<div><span class="d">${e.date}</span><span class="actor ${e.actor}">${e.actor}</span><span class="lid">${e.loop_id || ''}</span><span>${esc(e.message)}</span></div>`).join('') || '<div class="empty">No events yet.</div>';
+}
+
+init();
+</script>
+</body>
+</html>

@@ -76,6 +76,10 @@
   .decision h4{margin:0 0 6px;font-size:13px;color:var(--bad)}
   .kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:13px}
   .kv span:first-child{color:var(--muted)}
+  input.edit,textarea.edit{width:100%;font:inherit;font-size:13px;padding:4px 6px;border:1px dashed #c5cdd8;border-radius:5px;background:#fffdf7;color:var(--ink)}
+  input.edit:focus,textarea.edit:focus{border-style:solid;border-color:var(--human);outline:none;background:#fff}
+  textarea.edit{resize:vertical;min-height:38px;line-height:1.35}
+  .addrow td{background:#fafbfc}
 </style>
 </head>
 <body>
@@ -182,9 +186,27 @@ async function extract() {
   try {
     const r = await api('/api/plan', {patient_id: $('patientBox').dataset.pid, note, clinician: {name, role},
                                        sample_id: note.trim() === s.note.trim() ? sampleId : null});
-    STATE = r.state; ACTIVE_LOOP = r.loop.id; render();
+    STATE = r.state; ACTIVE_LOOP = r.loop.id; ADDED = []; EDITS = {}; render();
   } catch (e) { $('extractErr').textContent = e.message; }
   $('extractBtn').disabled = false; $('extractBtn').textContent = 'Extract action plan';
+}
+
+let ADDED = [];  // investigations the clinician adds before approval (client-side until approve)
+let EDITS = {};  // clinician amendments to extracted items, keyed by item id
+
+function edited(itemId, field, value) {
+  EDITS[itemId] = {...(EDITS[itemId] || {}), [field]: value};
+  if (field === 'reason') {
+    const box = document.querySelector(`#plan input[data-item="${itemId}"]`);
+    if (box && box.disabled && value.trim()) { box.disabled = false; box.checked = true; }
+  }
+}
+
+function addItem(loopId) {
+  const name = $('addName').value.trim(), reason = $('addReason').value.trim();
+  if (!name || !reason) { $('planErr').textContent = 'An added investigation needs a name and a clinical indication.'; return; }
+  ADDED.push({name, reason, category: $('addCat').value, urgency: $('addUrg').value});
+  render();
 }
 
 async function approve(loopId) {
@@ -192,11 +214,13 @@ async function approve(loopId) {
   const approved = boxes.filter(b => b.checked).map(b => b.dataset.item);
   const fuBox = document.querySelector('#plan input[data-fu]');
   const intervalSel = document.querySelector('#plan select[data-interval]');
+  const edits = EDITS;
   try {
     const r = await api('/api/approve', {loop_id: loopId, approved_investigations: approved,
       approve_follow_up: fuBox ? fuBox.checked : false,
-      interval_weeks: intervalSel ? parseInt(intervalSel.value) : null});
-    STATE = r.state; render();
+      interval_weeks: intervalSel ? parseInt(intervalSel.value) : null,
+      edits, added: ADDED});
+    ADDED = []; EDITS = {}; STATE = r.state; render();
   } catch (e) { $('planErr').textContent = e.message; }
 }
 
@@ -227,12 +251,34 @@ function renderPlan() {
   const passedCount = 5 - gate.flags.filter(f => f.severity === 'block').length;
   checks = `<li><span class="ic ok">✓</span><span>${passedCount} of 5 deterministic checks passed${blocked ? '' : ' — routine plan'}</span></li>` + checks;
 
-  const rows = loop.items.map(i => `
+  const rows = loop.items.map(i => pending ? `
     <tr>
-      <td>${pending ? `<input type="checkbox" data-item="${i.id}" ${i.reason ? 'checked' : 'disabled'}>` : pill(i.status)}</td>
-      <td><b>${esc(i.name)}</b><br><span class="chip">${i.category}</span> <span class="chip">${i.urgency}</span></td>
-      <td>${i.reason ? esc(i.reason) : '<span style="color:var(--bad)">No indication stated — cannot be ordered</span>'}<br><span class="muted" style="font-size:11px">“${esc(i.evidence)}”</span></td>
+      <td><input type="checkbox" data-item="${i.id}" ${(EDITS[i.id]?.reason ?? i.reason) ? 'checked' : 'disabled'} title="Untick to not order"></td>
+      <td><input class="edit" data-name="${i.id}" value="${esc(EDITS[i.id]?.name ?? i.name)}" oninput="edited('${i.id}','name',this.value)"><br><span class="chip">${i.category}</span> <span class="chip">${i.urgency}</span></td>
+      <td><textarea class="edit" data-reason="${i.id}" rows="2" placeholder="Clinical indication required to order" oninput="edited('${i.id}','reason',this.value)">${esc(EDITS[i.id]?.reason ?? (i.reason || ''))}</textarea>
+          ${i.reason ? '' : '<div style="color:var(--bad);font-size:11px">No indication in the note — type one to enable ordering, or leave unticked</div>'}
+          <span class="muted" style="font-size:11px">“${esc(i.evidence)}”</span></td>
+    </tr>` : `
+    <tr>
+      <td>${pill(i.status)}</td>
+      <td><b>${esc(i.name)}</b>${i.edited_by_clinician ? ' <span class="chip" style="background:#fff3e0;color:var(--human)">amended by clinician</span>' : ''}<br><span class="chip">${i.category}</span> <span class="chip">${i.urgency}</span></td>
+      <td>${esc(i.reason || '—')}<br><span class="muted" style="font-size:11px">“${esc(i.evidence)}”</span></td>
     </tr>`).join('');
+  const addRow = pending ? `
+    <tr class="addrow">
+      <td><span class="muted" style="font-size:16px">+</span></td>
+      <td><input class="edit" id="addName" placeholder="Add investigation…"><br>
+          <select id="addCat" style="width:auto;padding:3px 6px;font-size:12px"><option>imaging</option><option>bloods</option><option>biopsy</option><option selected>other</option></select>
+          <select id="addUrg" style="width:auto;padding:3px 6px;font-size:12px"><option selected>routine</option><option>urgent</option></select></td>
+      <td><textarea class="edit" id="addReason" rows="2" placeholder="Clinical indication"></textarea>
+          <button class="small" onclick="addItem('${loop.id}')">Add to plan</button></td>
+    </tr>` : '';
+  const addedRows = pending ? ADDED.map((a, idx) => `
+    <tr>
+      <td><span class="chip" style="background:#fff3e0;color:var(--human)">added</span></td>
+      <td><b>${esc(a.name)}</b><br><span class="chip">${a.category}</span> <span class="chip">${a.urgency}</span></td>
+      <td>${esc(a.reason)} <button class="small ghost" onclick="ADDED.splice(${idx},1);render()">remove</button></td>
+    </tr>`).join('') : '';
 
   const fu = loop.plan.follow_up;
   const cands = fu ? [...new Set(fu.interval_candidates_weeks)].sort((a,b)=>a-b) : [];
@@ -267,7 +313,7 @@ function renderPlan() {
   $('plan').innerHTML = `
     <div class="row"><b>${esc(loop.patient.name)}</b> <span class="muted">${loop.patient.age}${loop.patient.sex} · ${loop.patient.clinic}</span> ${pill(loop.status)} <span class="chip">${loop.id}</span></div>
     <ul class="checks mt">${checks}</ul>
-    <table><thead><tr><th style="width:34px"></th><th>Investigation</th><th>Clinical indication (from note)</th></tr></thead><tbody>${rows}</tbody></table>
+    <table><thead><tr><th style="width:34px"></th><th>Investigation</th><th>Clinical indication (from note${pending ? ' — editable' : ''})</th></tr></thead><tbody>${rows}${addedRows}${addRow}</tbody></table>
     <div class="mt">${fuHtml}</div>
     ${decision}
     ${pending ? `<div class="row mt"><button class="primary" onclick="approve('${loop.id}')">Approve &amp; action plan</button><span class="muted" style="font-size:12px">One click: order · book · message · record · track</span></div><div class="err" id="planErr"></div>` : after}`;

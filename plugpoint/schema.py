@@ -82,6 +82,18 @@ class PlanRequest(BaseModel):
     sample_id: Optional[str] = Field(default=None, description="Fixture id; enables offline mock extraction")
 
 
+class ItemEdit(BaseModel):
+    name: Optional[str] = None
+    reason: Optional[str] = None
+
+
+class NewItem(BaseModel):
+    name: str
+    category: Category = "other"
+    reason: str
+    urgency: Urgency = "routine"
+
+
 class ApproveRequest(BaseModel):
     loop_id: str
     approved_investigations: list[str] = Field(description="Item ids the clinician approved")
@@ -89,3 +101,5 @@ class ApproveRequest(BaseModel):
     interval_weeks: Optional[int] = Field(
         default=None, description="Clinician-chosen interval when the plan was ambiguous"
     )
+    edits: dict[str, ItemEdit] = Field(default_factory=dict, description="Clinician amendments keyed by item id")
+    added: list[NewItem] = Field(default_factory=list, description="Investigations the clinician added")

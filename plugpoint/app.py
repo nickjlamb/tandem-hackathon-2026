@@ -66,7 +66,9 @@ def plan(req: PlanRequest):
 @app.post("/api/approve")
 def approve(req: ApproveRequest):
     try:
-        loop = STORE.approve(req.loop_id, req.approved_investigations, req.approve_follow_up, req.interval_weeks)
+        loop = STORE.approve(req.loop_id, req.approved_investigations, req.approve_follow_up, req.interval_weeks,
+                             edits={k: v.model_dump() for k, v in req.edits.items()},
+                             added=[a.model_dump() for a in req.added])
     except (KeyError, StopIteration):
         raise HTTPException(404, "Unknown loop")
     except ValueError as e:

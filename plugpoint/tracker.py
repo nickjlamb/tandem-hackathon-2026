@@ -83,11 +83,42 @@ class Store:
 
     # --------------------------------------------------------- approval stage
     def approve(self, loop_id: str, approved_item_ids: list[str], approve_follow_up: bool,
-                interval_weeks: int | None, approver: Clinician | None = None) -> dict:
+                interval_weeks: int | None, approver: Clinician | None = None,
+                edits: dict | None = None, added: list | None = None) -> dict:
         loop = self.loops[loop_id]
         if loop["status"] not in ("awaiting_approval", "needs_review"):
             raise ValueError(f"Loop {loop_id} is {loop['status']}, cannot approve")
         approver = approver or Clinician(**loop["clinician"])
+        approved_item_ids = list(approved_item_ids)
+
+        # ---- clinician amendments to the extracted plan (recorded as HUMAN actions) ----
+        for item_id, edit in (edits or {}).items():
+            item = next((i for i in loop["items"] if i["id"] == item_id), None)
+            if not item:
+                continue
+            changes = []
+            new_name = (edit.get("name") or "").strip()
+            new_reason = (edit.get("reason") or "").strip()
+            if new_name and new_name != item["name"]:
+                changes.append(f"investigation '{item['name']}' -> '{new_name}'")
+                item["name"] = new_name
+            if new_reason and new_reason != (item["reason"] or ""):
+                changes.append(("added indication" if not item["reason"] else "amended indication") + f" for {item['name']}: '{new_reason}'")
+                item["reason"] = new_reason
+            if changes:
+                item["edited_by_clinician"] = True
+                self.audit.record(self.today, "HUMAN", f"{approver.name} amended plan: " + "; ".join(changes), loop_id)
+        for new in (added or []):
+            item = {
+                "id": f"I{next(self._item_ids):03d}", "name": new["name"].strip(), "category": new.get("category", "other"),
+                "reason": new["reason"].strip(), "urgency": new.get("urgency", "routine"),
+                "evidence": "added by clinician at approval", "edited_by_clinician": True,
+                "status": "proposed", "order_id": None, "ordered_on": None, "expected_by": None,
+                "result": None, "result_on": None, "overdue": False,
+            }
+            loop["items"].append(item)
+            approved_item_ids.append(item["id"])
+            self.audit.record(self.today, "HUMAN", f"{approver.name} added investigation: {item['name']} ({item['category']}) - '{item['reason']}'", loop_id)
 
         # Clinician resolves any blocking issue by explicit choice
         if loop["gate"]["requires_human_review"]:

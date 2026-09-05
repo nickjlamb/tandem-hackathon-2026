@@ -1,0 +1,30 @@
+name: Gold eval
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  eval:
+    name: Offline gold evaluation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: pip install -r requirements.txt
+      - name: Compile
+        run: python -m compileall -q plugpoint eval
+      - name: Smoke-run the workflow (CLI)
+        run: python -m plugpoint.cli
+      - name: Run gold evaluation (offline fixtures)
+        run: python -m eval.run_eval --offline
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: eval/results.json

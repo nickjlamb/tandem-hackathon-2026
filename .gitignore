@@ -88,9 +88,9 @@ data/raw/
 *.db
 
 # ── Pre-hackathon prep materials (kept local only) ────
-tandem_hackathon_cheatsheet.pdf
-tandem_hackathon_demo_skeleton_v2.pptx
-workflow.png
+/tandem_hackathon_cheatsheet.pdf
+/tandem_hackathon_demo_skeleton_v2.pptx
+/workflow.png
 
 # ── Sandbox leftovers (safe to delete this folder) ────
 _to_delete/

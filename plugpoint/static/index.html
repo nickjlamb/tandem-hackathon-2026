@@ -67,6 +67,7 @@
   .audit div{display:flex;gap:10px;padding:2px 0;border-bottom:1px solid #f1f4f8}
   .audit .d{color:var(--muted);flex:none;width:80px}
   .audit .lid{color:var(--muted);flex:none;width:36px}
+  .audit .actor{align-self:flex-start;flex:none}
   .empty{color:var(--muted);font-style:italic;padding:10px 0}
   .pack{background:#f3f7fd;border:1px solid #c9dbf7;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:13px}
   .err{color:var(--bad);font-size:13px;margin-top:8px}
@@ -138,6 +139,7 @@
         <span class="actor SYSTEM">SYSTEM</span> tracker
       </span>
     </h2>
+    <label style="display:inline-flex;gap:6px;align-items:center;margin:0 0 6px;font-size:12px"><input type="checkbox" id="auditMine" onchange="renderAudit()" style="width:auto"> Show only the selected patient's loop</label>
     <div class="audit" id="audit"></div>
   </section>
 </footer>
@@ -288,8 +290,10 @@ function renderPlan() {
   const cands = fu ? [...new Set(fu.interval_candidates_weeks)].sort((a,b)=>a-b) : [];
   let fuHtml = '<div class="muted">No follow-up in the note.</div>';
   if (fu) {
+    const suggested = gate.flags.find(f => f.code === 'follow_up_before_results')?.detail?.suggested_interval_weeks;
+    const opts = [...new Set([...(cands.length ? cands : [2,4,6,8,12]), ...(suggested ? [suggested] : []), 4,6,8,12])].sort((a,b)=>a-b);
     const intervalCtl = pending && (cands.length !== 1 || gate.reasons.includes('follow_up_before_results'))
-      ? `<select data-interval style="width:auto;display:inline-block">${(cands.length ? cands : [2,4,6,8,12]).map(w => `<option value="${w}">${w} weeks${cands.length ? ' (in note)' : ''}</option>`).join('')}${cands.length ? [4,6,8,12].filter(w => !cands.includes(w)).map(w => `<option value="${w}">${w} weeks (other)</option>`).join('') : ''}</select>`
+      ? `<select data-interval style="width:auto;display:inline-block">${opts.map(w => `<option value="${w}" ${w === suggested ? 'selected' : ''}>${w} weeks${cands.includes(w) ? ' (in note)' : ''}${w === suggested ? ' — earliest workable' : ''}</option>`).join('')}</select>`
       : `<b>${loop.follow_up_weeks} weeks</b>`;
     fuHtml = `<div class="row">${pending ? `<input type="checkbox" data-fu checked>` : ''}
       <span>Follow-up in ${intervalCtl} with <b>${loop.reviewer_role}</b>${fu.purpose ? ` · <span class="muted">${esc(fu.purpose)}</span>` : ''}</span></div>
@@ -298,9 +302,15 @@ function renderPlan() {
 
   let decision = '';
   if (pending && blocked) {
+    const guide = {
+      conflicting_follow_up_interval: `The note gives more than one interval (${cands.map(w => w + ' wk').join(' and ')}). Choose which one you meant.`,
+      follow_up_before_results: (() => { const f = gate.flags.find(f => f.code === 'follow_up_before_results'); return `Results are not expected until ${fmt(f?.detail?.earliest_date)}. Choose ${f?.detail?.suggested_interval_weeks ?? 'a later'} weeks or later, or drop an investigation.`; })(),
+      missing_follow_up_interval: 'The note asks for follow-up but gives no interval. Choose one.',
+      missing_indication: 'Type a clinical indication for the flagged investigation, or untick it so it is not ordered.',
+    };
     decision = `<div class="decision"><h4>Clinician decision required — the system will not guess</h4>
-      <div>${gate.reasons.map(r => `<span class="chip">${r.replace(/_/g,' ')}</span>`).join(' ')}</div>
-      <div class="muted mt" style="font-size:12px">Resolve above (choose an interval / untick items without an indication), then approve. Nothing is ordered or booked until you do.</div></div>`;
+      ${gate.reasons.map(r => `<div style="margin:4px 0"><span class="chip">${r.replace(/_/g,' ')}</span> <span style="font-size:13px">${guide[r] || ''}</span></div>`).join('')}
+      <div class="muted mt" style="font-size:12px">Nothing is ordered or booked until you approve. Your choice is checked by the same rules.</div></div>`;
   }
 
   let after = '';
@@ -308,14 +318,18 @@ function renderPlan() {
     const appt = loop.appointment;
     after = `<div class="pack"><b>Approved by ${esc(loop.approved_by.name)} on ${fmt(loop.approved_on)}.</b>
       ${appt ? `Follow-up ${fmt(appt.date)} with ${esc(appt.reviewer_name)} (${appt.clinic}) ${pill(appt.status)}` : 'No follow-up booked.'}
-      <div class="muted" style="font-size:12px;margin-top:4px">Orders sent, appointment booked, patient messaged, EPR updated — see audit trail. Clinician interaction: 1 approval.</div></div>`;
+      <div class="row" style="margin-top:6px;gap:14px;font-size:12px">
+        <span><b style="font-size:16px;color:var(--api)">${loop.counts?.api_actions ?? 0}</b> admin actions by software</span>
+        <span><b style="font-size:16px;color:var(--rule)">${loop.counts?.rule_checks ?? 0}</b> rule checks</span>
+        <span><b style="font-size:16px;color:var(--human)">${loop.counts?.human_decisions ?? 0}</b> clinician decision${(loop.counts?.human_decisions ?? 0) === 1 ? '' : 's'}</span>
+      </div></div>`;
     const received = loop.items.filter(i => i.result);
     if (received.length) after += `<div class="pack"><b>Pre-clinic pack</b> (auto-assembled for ${esc(appt ? appt.reviewer_name : 'reviewer')}):<br>` +
       received.map(i => `• ${esc(i.name)} (${fmt(i.result_on)}): ${esc(i.result)}`).join('<br>') + `<br>• Previous plan: ${esc(loop.plan.follow_up?.purpose || '')}</div>`;
   }
 
   $('plan').innerHTML = `
-    <div class="row"><b>${esc(loop.patient.name)}</b> <span class="muted">${loop.patient.age}${loop.patient.sex} · ${loop.patient.clinic}</span> ${pill(loop.status)} <span class="chip">${loop.id}</span></div>
+    <div class="row"><b>${esc(loop.patient.name)}</b> <span class="muted">${loop.patient.age}${loop.patient.sex} · ${loop.patient.clinic}</span> ${pill(loop.status)} <span class="chip">${loop.id}</span>${!pending && blocked ? '<span class="chip" style="background:#fff3e0;color:var(--human)">escalated → resolved by clinician</span>' : ''}</div>
     <ul class="checks mt">${checks}</ul>
     <table><thead><tr><th style="width:34px"></th><th>Investigation</th><th>Clinical indication (from note${pending ? ' — editable' : ''})</th></tr></thead><tbody>${rows}${addedRows}${addRow}</tbody></table>
     <div class="mt">${fuHtml}</div>
@@ -325,7 +339,16 @@ function renderPlan() {
 
 function renderLoops() {
   if (!STATE.loops.length) { $('loops').innerHTML = '<div class="empty">No open loops yet.</div>'; return; }
-  $('loops').innerHTML = STATE.loops.slice().reverse().map(l => {
+  const open = STATE.loops.filter(l => l.status === 'open');
+  const awaiting = open.flatMap(l => l.items).filter(i => i.status === 'result_awaited');
+  const overdue = awaiting.filter(i => i.overdue);
+  const strip = `<div class="row" style="gap:14px;font-size:12px;margin-bottom:10px;color:var(--muted)">
+      <span><b style="font-size:16px;color:var(--ink)">${open.length}</b> open loop${open.length === 1 ? '' : 's'}</span>
+      <span><b style="font-size:16px;color:var(--api)">${awaiting.length}</b> results awaited</span>
+      <span><b style="font-size:16px;color:${overdue.length ? 'var(--bad)' : 'var(--ok)'}">${overdue.length}</b> overdue</span>
+      <span><b style="font-size:16px;color:${STATE.notifications.length ? 'var(--warn)' : 'var(--ok)'}">${STATE.notifications.length}</b> alert${STATE.notifications.length === 1 ? '' : 's'} open</span>
+    </div>`;
+  $('loops').innerHTML = strip + STATE.loops.slice().reverse().map(l => {
     const appt = l.appointment;
     const items = l.items.map(i => `
       <div class="item">
@@ -367,7 +390,8 @@ function renderAlerts() {
 
 function renderAudit() {
   const el = $('audit');
-  el.innerHTML = STATE.audit.slice().reverse().map(e =>
+  const mine = $('auditMine')?.checked && ACTIVE_LOOP;
+  el.innerHTML = STATE.audit.filter(e => !mine || e.loop_id === ACTIVE_LOOP).slice().reverse().map(e =>
     `<div><span class="d">${e.date}</span><span class="actor ${e.actor}">${e.actor}</span><span class="lid">${e.loop_id || ''}</span><span>${esc(e.message)}</span></div>`).join('') || '<div class="empty">No events yet.</div>';
 }
 

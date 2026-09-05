@@ -20,6 +20,10 @@ RESULT_BUFFER_DAYS = 2
 # Warn the clinician if results are still outstanding this close to the appointment.
 APPOINTMENT_LEAD_DAYS = 7
 
+# The five plan checks, in the order they run (shown in the UI and audit trail).
+CHECK_NAMES = ["indication stated", "single follow-up interval", "interval present",
+               "appointment after results", "reviewer resolved"]
+
 
 def expected_result_date(category: str, ordered_on: date) -> date:
     return ordered_on + timedelta(days=TURNAROUND_DAYS.get(category, TURNAROUND_DAYS["other"]))
@@ -81,11 +85,13 @@ def check_plan(plan: ActionPlan, author: Clinician, today: date) -> GateResult:
             proposed = next_weekday(today + timedelta(weeks=weeks))
             earliest = earliest_follow_up_date(plan, today)
             if proposed < earliest:
+                suggested = -(-(earliest - today).days // 7)  # ceil to whole weeks
                 flags.append(Flag(
                     code="follow_up_before_results", severity="block",
                     message=(f"Follow-up in {weeks} wk ({proposed.isoformat()}) is before results are expected "
-                             f"({earliest.isoformat()})"),
-                    detail={"proposed_date": proposed.isoformat(), "earliest_date": earliest.isoformat()},
+                             f"({earliest.isoformat()}) - earliest workable interval is {suggested} wk"),
+                    detail={"proposed_date": proposed.isoformat(), "earliest_date": earliest.isoformat(),
+                            "suggested_interval_weeks": suggested},
                 ))
         # R5 - reviewer defaulting is deterministic and visible
         if fu.reviewer_role not in ("consultant", "registrar"):

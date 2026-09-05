@@ -15,7 +15,7 @@ from datetime import date, timedelta
 
 from .audit import AuditLog
 from .integrations import Integrations
-from .rules import (APPOINTMENT_LEAD_DAYS, RESULT_BUFFER_DAYS, check_plan, earliest_follow_up_date,
+from .rules import (APPOINTMENT_LEAD_DAYS, CHECK_NAMES, RESULT_BUFFER_DAYS, check_plan, earliest_follow_up_date,
                     expected_result_date, next_weekday, resolve_reviewer)
 from .schema import ActionPlan, Clinician, GateResult
 
@@ -72,13 +72,14 @@ class Store:
     def _audit_gate(self, loop_id: str, gate: GateResult) -> None:
         passed = [f for f in gate.flags if f.severity != "block"]
         blocked = [f for f in gate.flags if f.severity == "block"]
-        n_checks = 5
         if blocked:
             self.audit.record(self.today, "RULE",
-                              f"Plan checks: {len(blocked)} blocking issue(s) -> clinician decision required: "
+                              f"Plan checks: {len(CHECK_NAMES) - len(blocked)}/{len(CHECK_NAMES)} passed, "
+                              f"{len(blocked)} blocking -> clinician decision required: "
                               + "; ".join(f.message for f in blocked), loop_id)
         else:
-            self.audit.record(self.today, "RULE", f"Plan checks PASS ({n_checks} rules)"
+            self.audit.record(self.today, "RULE", f"Plan checks PASS ({len(CHECK_NAMES)}/{len(CHECK_NAMES)}: "
+                              + ", ".join(CHECK_NAMES) + ")"
                               + ("; notes: " + "; ".join(f.message for f in passed) if passed else ""), loop_id)
 
     # --------------------------------------------------------- approval stage
@@ -191,9 +192,11 @@ class Store:
         item["result"] = self.integrations.orders.fetch_result(item["name"], item["category"])
         item["result_on"] = self.today.isoformat()
         item["status"] = "result_received"
+        was_overdue = item["overdue"]
         item["overdue"] = False
         self.audit.record(self.today, "API", f"[MOCK RESULTS] Result received for {item['name']} ({item['order_id']})", loop_id)
-        self.audit.record(self.today, "RULE", f"Result matched to {item['name']} -> result_received", loop_id)
+        self.audit.record(self.today, "RULE", f"Result matched to {item['name']} ({item['order_id']}) -> result_received"
+                          + (" - overdue alert cleared" if was_overdue else ""), loop_id)
         self._resolve_notifications(loop_id, item_id=item_id)
         if all(i["status"] in ("result_received", "declined", "reviewed") for i in loop["items"]):
             self.audit.record(self.today, "SYSTEM", "All results in - pre-clinic pack ready for reviewer", loop_id)
@@ -323,7 +326,19 @@ class Store:
             n["resolved"] = True
 
     # ------------------------------------------------------------- snapshot
+    def loop_counts(self, loop_id: str) -> dict:
+        """How much work the software did vs how many decisions the clinician made."""
+        entries = self.audit.for_loop(loop_id)
+        return {
+            "api_actions": sum(1 for e in entries if e["actor"] == "API"),
+            "rule_checks": sum(1 for e in entries if e["actor"] == "RULE"),
+            "human_decisions": sum(1 for e in entries if e["actor"] == "HUMAN"),
+            "alerts": sum(1 for e in entries if e["actor"] == "SYSTEM" and e["message"].startswith("ALERT")),
+        }
+
     def snapshot(self) -> dict:
+        for loop in self.loops.values():
+            loop["counts"] = self.loop_counts(loop["id"])
         return {
             "today": self.today.isoformat(),
             "loops": list(self.loops.values()),

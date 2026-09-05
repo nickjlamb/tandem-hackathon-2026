@@ -15,6 +15,8 @@ PATIENTS = {
              "phone": "07700 900002", "clinic": "Respiratory"},
     "P003": {"id": "P003", "name": "Priya Nair", "age": 45, "sex": "F", "hospital_no": "H-10003",
              "phone": "07700 900003", "clinic": "Hepatology"},
+    "P004": {"id": "P004", "name": "Tomasz Wójcik", "age": 71, "sex": "M", "hospital_no": "H-10004",
+             "phone": "07700 900004", "clinic": "Respiratory"},
 }
 
 CLINICIANS = [
@@ -66,6 +68,18 @@ SAMPLE_NOTES = {
             "Hepatology clinic 05/09/2026. 45F, known fatty liver disease, LFTs stable. "
             "Discussed lifestyle measures.\n\n"
             "Plan: liver biopsy. Repeat LFTs. Follow up in 4 weeks."
+        ),
+    },
+    "D_timing": {
+        "patient_id": "P004",
+        "label": "D · Results not back before appointment (should escalate)",
+        "clinician": {"name": "Dr Elena Fischer", "role": "consultant"},
+        "note": (
+            "Respiratory clinic 05/09/2026. 71M, 2.4 cm spiculated right upper lobe nodule on CT, "
+            "PET-avid, no nodal disease. Performance status 1. Discussed at MDT; tissue diagnosis needed "
+            "before treatment decision.\n\n"
+            "Plan: CT-guided lung biopsy of the RUL nodule to obtain histology. See in clinic in 2 weeks "
+            "with the histology result to discuss treatment options. I will review him myself."
         ),
     },
 }
@@ -125,6 +139,23 @@ MOCK_PLANS = {
         ambiguities=["No indication is given for the liver biopsy."],
     ),
 }
+
+MOCK_PLANS["D_timing"] = ActionPlan(
+    investigations=[
+        Investigation(
+            name="CT-guided lung biopsy (RUL nodule)", category="biopsy",
+            reason="Tissue diagnosis of 2.4 cm PET-avid spiculated RUL nodule prior to treatment decision",
+            urgency="urgent",
+            evidence="CT-guided lung biopsy of the RUL nodule to obtain histology",
+        ),
+    ],
+    follow_up=FollowUp(
+        interval_weeks=2, interval_candidates_weeks=[2], reviewer_role="consultant",
+        purpose="Discuss histology result and treatment options",
+        evidence="See in clinic in 2 weeks with the histology result ... I will review him myself",
+    ),
+    ambiguities=[],
+)
 
 # Canned result text used by the mock results feed, keyed by category.
 MOCK_RESULTS = {

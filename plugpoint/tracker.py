@@ -135,6 +135,12 @@ class Store:
                               f"{approver.name} resolved review: " + ", ".join(loop["gate"]["reasons"]), loop_id)
 
         if interval_weeks is not None:
+            # Clinician-chosen interval must still land after results are expected (same rule as R4)
+            earliest = earliest_follow_up_date(ActionPlan.model_validate(loop["plan"]), self.today)
+            proposed = next_weekday(self.today + timedelta(weeks=interval_weeks))
+            if approve_follow_up and proposed < earliest:
+                raise ValueError(f"Follow-up in {interval_weeks} wk ({proposed.isoformat()}) is still before results are "
+                                 f"expected ({earliest.isoformat()}). Choose a later interval.")
             loop["follow_up_weeks"] = interval_weeks
 
         approved = [i for i in loop["items"] if i["id"] in approved_item_ids]

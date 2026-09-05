@@ -1,6 +1,6 @@
 # Evaluation
 
-Write the test cases before the code. Aim for 5–10 gold cases; a demo that runs them live beats a slide.
+**Implemented:** `eval/cases.json` (15 cases) + `eval/run_eval.py` + `/eval` results page. See README → Evaluation. The checklist below was the plan.
 
 ## Gold test cases
 | ID | Description | Type (normal / edge / ambiguous) | Expected outcome |

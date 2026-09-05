@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PlugPoint · gold evaluation</title>
+<style>
+  :root{--bg:#f4f6f9;--card:#fff;--ink:#1c2430;--muted:#66717f;--line:#e2e7ee;--ok:#1f8a5b;--bad:#c0392b;--warn:#c77d0a;--api:#1f5fbf;--ai:#6b4fbb}
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+  header{display:flex;align-items:center;gap:16px;padding:12px 20px;background:#fff;border-bottom:1px solid var(--line)}
+  header h1{font-size:18px;margin:0}header h1 span{color:var(--muted);font-weight:400;font-size:13px;margin-left:8px}
+  .spacer{flex:1}
+  a{color:var(--api)}
+  button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--ink)}
+  button.primary{background:var(--api);border-color:var(--api);color:#fff;font-weight:600}
+  button:disabled{opacity:.5;cursor:wait}
+  main{padding:16px 20px;max-width:1300px;margin:0 auto}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:16px}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .tile{background:#fbfcfd;border:1px solid var(--line);border-radius:9px;padding:12px 14px}
+  .tile b{display:block;font-size:30px;line-height:1.1;letter-spacing:-.5px}
+  .tile span{font-size:12px;color:var(--muted)}
+  .ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+  td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px}
+  .pill.PASS{background:#e6f5ee;color:var(--ok)}.pill.FAIL{background:#fdecea;color:var(--bad)}
+  .chip{display:inline-block;font-size:11px;padding:1px 7px;border-radius:5px;background:#eef2f7;color:var(--muted)}
+  .chip.escalation,.chip.ambiguous{background:#fdecea;color:var(--bad)}.chip.edge{background:#fff3e0;color:var(--warn)}
+  .checks{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted)}
+  .checks .x{color:var(--bad)}
+  .muted{color:var(--muted)}
+  details summary{cursor:pointer;color:var(--api);font-size:12px}
+  .bar{height:10px;border-radius:5px;background:#fdecea;overflow:hidden;margin-top:6px}
+  .bar div{height:100%;background:var(--ok)}
+</style>
+</head>
+<body>
+<header>
+  <h1>PlugPoint <span>gold evaluation</span></h1>
+  <a href="/" style="font-size:13px">← back to workflow</a>
+  <div class="spacer"></div>
+  <span class="muted" id="mode" style="font-size:12px"></span>
+  <button onclick="run(true)" id="btnOff">Run offline (rules + tracker)</button>
+  <button class="primary" onclick="run(false)" id="btnLive">Run with live extraction</button>
+</header>
+<main>
+  <div class="card">
+    <div class="muted" style="font-size:13px">15 synthetic cases run through the <b>same</b> workflow code as the app: extract → rules → gate → approve → mocked actions → tracker events. Expected behaviour was specified by the team; failures are reported as found. Nothing in the production workflow is adjusted for the eval.</div>
+  </div>
+  <div id="out"><div class="card muted">No results yet — run the evaluation.</div></div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function load() { const r = await fetch('/api/eval/results'); render(await r.json()); }
+async function run(offline) {
+  $('btnOff').disabled = $('btnLive').disabled = true;
+  $('out').innerHTML = `<div class="card">Running ${offline ? 'offline' : 'with live extraction (≈1 min for 15 calls)'}…</div>`;
+  try { const r = await fetch('/api/eval/run?offline=' + offline, {method: 'POST'}); render(await r.json()); }
+  catch (e) { $('out').innerHTML = `<div class="card bad">Run failed: ${esc(e.message)}</div>`; }
+  $('btnOff').disabled = $('btnLive').disabled = false;
+}
+function render(data) {
+  const s = data.summary;
+  if (!s) { $('out').innerHTML = '<div class="card muted">No results yet — run the evaluation.</div>'; return; }
+  $('mode').textContent = `last run: ${s.run_at} · extraction: ${s.mode}${s.model ? ' (' + s.model + ')' : ''} · ${s.seconds}s`;
+  const missedCls = s.escalations_missed === 0 ? 'ok' : 'bad';
+  const tiles = `
+    <div class="card"><div class="tiles">
+      <div class="tile"><b>${s.total}</b><span>gold cases</span></div>
+      <div class="tile"><b class="ok">${s.passed}</b><span>passed</span></div>
+      <div class="tile"><b class="${s.failed ? 'bad' : 'ok'}">${s.failed}</b><span>failed</span></div>
+      <div class="tile"><b class="${s.pass_pct === 100 ? 'ok' : s.pass_pct >= 80 ? 'warn' : 'bad'}">${s.pass_pct}%</b><span>expected workflow behaviour</span><div class="bar"><div style="width:${s.pass_pct}%"></div></div></div>
+      <div class="tile"><b class="${s.escalation_failed ? 'bad' : 'ok'}">${s.escalation_passed}/${s.escalation_total}</b><span>escalation cases passed</span></div>
+      <div class="tile"><b class="${missedCls}">${s.escalations_missed}</b><span>escalations missed (auto-actioned)</span></div>
+    </div>
+    <div class="muted" style="font-size:12px;margin-top:10px">By type: ${Object.entries(s.by_type).map(([t,v]) => `<span class="chip ${t}">${t}</span> ${v.passed}/${v.total}`).join(' &nbsp; ')}</div>
+    </div>`;
+  const rows = data.results.map(r => `
+    <tr>
+      <td><span class="pill ${r.passed ? 'PASS' : 'FAIL'}">${r.passed ? 'PASS' : 'FAIL'}</span></td>
+      <td><b>${r.id}</b></td>
+      <td><span class="chip ${r.type}">${r.type}</span></td>
+      <td>${esc(r.title)}<br>
+        <details><summary>${r.checks.length} checks · ${r.checks.filter(c => !c.ok).length} failed · extraction: ${r.source}</summary>
+          <div class="checks">${r.checks.map(c => `<div class="${c.ok ? '' : 'x'}">${c.ok ? '✓' : '✗'} ${esc(c.name)}: expected ${esc(JSON.stringify(c.expected))}${c.ok ? '' : ', got ' + esc(JSON.stringify(c.actual))}</div>`).join('')}</div>
+        </details></td>
+      <td>${r.expected_escalation ? '<span class="chip escalation">must escalate</span>' : '<span class="chip">routine</span>'}</td>
+    </tr>`).join('');
+  $('out').innerHTML = tiles + `<div class="card"><table><thead><tr><th></th><th>Case</th><th>Type</th><th>Behaviour under test</th><th>Gate</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+load();
+</script>
+</body>
+</html>

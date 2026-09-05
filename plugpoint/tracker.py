@@ -54,7 +54,7 @@ class Store:
                 "id": f"I{next(self._item_ids):03d}", "name": inv.name, "category": inv.category,
                 "reason": inv.reason, "urgency": inv.urgency, "evidence": inv.evidence,
                 "status": "proposed", "order_id": None, "ordered_on": None, "expected_by": None,
-                "result": None, "result_on": None, "overdue": False,
+                "result": None, "result_on": None, "overdue": False, "on_hold": False, "hold_reason": None,
             })
         loop = {
             "id": loop_id, "patient_id": patient_id, "patient": self.integrations.epr.get_patient(patient_id),
@@ -115,7 +115,7 @@ class Store:
                 "reason": new["reason"].strip(), "urgency": new.get("urgency", "routine"),
                 "evidence": "added by clinician at approval", "edited_by_clinician": True,
                 "status": "proposed", "order_id": None, "ordered_on": None, "expected_by": None,
-                "result": None, "result_on": None, "overdue": False,
+                "result": None, "result_on": None, "overdue": False, "on_hold": False, "hold_reason": None,
             }
             loop["items"].append(item)
             approved_item_ids.append(item["id"])
@@ -194,12 +194,44 @@ class Store:
         item["status"] = "result_received"
         was_overdue = item["overdue"]
         item["overdue"] = False
+        item["on_hold"] = False
         self.audit.record(self.today, "API", f"[MOCK RESULTS] Result received for {item['name']} ({item['order_id']})", loop_id)
         self.audit.record(self.today, "RULE", f"Result matched to {item['name']} ({item['order_id']}) -> result_received"
                           + (" - overdue alert cleared" if was_overdue else ""), loop_id)
-        self._resolve_notifications(loop_id, item_id=item_id)
+        self._resolve_notifications(loop_id, item_id=item_id)  # clears overdue / on-hold alerts for this item
         if all(i["status"] in ("result_received", "declined", "reviewed") for i in loop["items"]):
             self.audit.record(self.today, "SYSTEM", "All results in - pre-clinic pack ready for reviewer", loop_id)
+        self.run_checks()
+        return loop
+
+    def hold_investigation(self, loop_id: str, item_id: str, reason: str = "Vetting query from reporting department") -> dict:
+        """Downstream department has put the request on hold (e.g. radiology vetting). The clinician
+        must engage with the department; the system will not silently wait."""
+        loop = self.loops[loop_id]
+        item = next(i for i in loop["items"] if i["id"] == item_id)
+        if item["status"] != "result_awaited":
+            raise ValueError(f"{item['name']} is {item['status']}, cannot be put on hold")
+        item["on_hold"] = True
+        item["hold_reason"] = reason
+        self.audit.record(self.today, "API", f"[MOCK ORDERS] {item['name']} ({item['order_id']}) placed ON HOLD by department: {reason}", loop_id)
+        self._resolve_notifications(loop_id, item_id=item_id)  # replace any overdue alert with the hold alert
+        self._notify(loop, "investigation_on_hold", item_id=item_id,
+                     message=f"{item['name']} on hold - {reason}. Contact the department to get it vetted/scheduled.",
+                     actions=["resolve_hold", "acknowledge"])
+        self.run_checks()
+        return loop
+
+    def resolve_hold(self, loop_id: str, item_id: str, new_expected: date, approver_name: str) -> dict:
+        loop = self.loops[loop_id]
+        item = next(i for i in loop["items"] if i["id"] == item_id)
+        self.audit.record(self.today, "HUMAN", f"{approver_name} resolved hold with department for {item['name']}: now expected {new_expected.isoformat()}", loop_id)
+        self.audit.record(self.today, "API", f"[MOCK ORDERS] {item['name']} ({item['order_id']}) hold released - scheduled", loop_id)
+        item["on_hold"] = False
+        item["hold_reason"] = None
+        item["overdue"] = False
+        item["expected_by"] = new_expected.isoformat()
+        self.audit.record(self.today, "RULE", f"Expected date for {item['name']} reset to {item['expected_by']}", loop_id)
+        self._resolve_notifications(loop_id, item_id=item_id)
         self.run_checks()
         return loop
 
@@ -214,8 +246,10 @@ class Store:
             if loop["status"] != "open":
                 continue
             outstanding = [i for i in loop["items"] if i["status"] == "result_awaited"]
-            # C1 - result overdue
+            # C1 - result overdue (an item on hold already has its own alert)
             for item in outstanding:
+                if item["on_hold"]:
+                    continue
                 if self.today > date.fromisoformat(item["expected_by"]) and not item["overdue"]:
                     item["overdue"] = True
                     self._notify(loop, "result_overdue", item_id=item["id"],
@@ -231,9 +265,9 @@ class Store:
                 appt_date = date.fromisoformat(appt["date"])
                 days_left = (appt_date - self.today).days
                 latest_expected = max(date.fromisoformat(i["expected_by"]) for i in outstanding)
-                any_overdue = any(i["overdue"] for i in outstanding)
+                any_overdue = any(i["overdue"] or i["on_hold"] for i in outstanding)
                 at_risk = (
-                    (any_overdue and days_left <= 2 * APPOINTMENT_LEAD_DAYS)             # overdue result, appointment close
+                    (any_overdue and days_left <= 2 * APPOINTMENT_LEAD_DAYS)             # overdue/held result, appointment close
                     or latest_expected + timedelta(days=RESULT_BUFFER_DAYS) > appt_date   # results not expected in time
                 )
                 if at_risk and not self._has_open(loop["id"], "appointment_at_risk"):

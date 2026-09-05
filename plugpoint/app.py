@@ -27,6 +27,36 @@ def index():
     return FileResponse(STATIC / "index.html")
 
 
+@app.get("/eval")
+def eval_page():
+    return FileResponse(STATIC / "eval.html")
+
+
+@app.get("/api/eval/results")
+def eval_results():
+    from eval.run_eval import RESULTS_PATH
+    import json
+    if not RESULTS_PATH.exists():
+        return {"summary": None, "results": []}
+    return json.loads(RESULTS_PATH.read_text())
+
+
+@app.post("/api/eval/run")
+def eval_run(offline: bool = False):
+    """Runs the gold set through the same workflow classes the app uses. Synchronous; ~1 s offline,
+    ~1 min with live extraction."""
+    from eval.run_eval import run_all
+    import os
+    prev = os.environ.get("PLUGPOINT_MOCK_LLM")
+    try:
+        return run_all(offline=offline)
+    finally:  # do not leave the app in offline mode because the eval asked for it
+        if prev is None:
+            os.environ.pop("PLUGPOINT_MOCK_LLM", None)
+        else:
+            os.environ["PLUGPOINT_MOCK_LLM"] = prev
+
+
 @app.get("/api/meta")
 def meta():
     return {
@@ -95,6 +125,17 @@ def simulate_result(ev: Event):
     return STORE.snapshot()
 
 
+@app.post("/api/simulate/hold")
+def simulate_hold(ev: Event):
+    try:
+        STORE.hold_investigation(ev.loop_id, ev.item_id)
+    except (KeyError, StopIteration):
+        raise HTTPException(404, "Unknown loop/item")
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return STORE.snapshot()
+
+
 @app.post("/api/simulate/advance")
 def simulate_advance(days: int = 7):
     STORE.advance(days)
@@ -110,6 +151,10 @@ def clinician_action(action: str, ev: Event):
             if not ev.results_expected:
                 raise HTTPException(400, "results_expected date required")
             STORE.rebook(ev.loop_id, ev.results_expected, ev.actor)
+        elif action == "resolve_hold":
+            if not ev.results_expected:
+                raise HTTPException(400, "results_expected date required")
+            STORE.resolve_hold(ev.loop_id, ev.item_id, ev.results_expected, ev.actor)
         elif action == "keep":
             STORE.keep_appointment(ev.loop_id, ev.actor)
         elif action == "acknowledge":

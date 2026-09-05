@@ -1,0 +1,1073 @@
+{
+  "summary": {
+    "mode": "offline fixtures",
+    "model": null,
+    "run_at": "2026-09-05",
+    "seconds": 0.0,
+    "total": 15,
+    "passed": 15,
+    "failed": 0,
+    "pass_pct": 100,
+    "escalation_total": 5,
+    "escalation_passed": 5,
+    "escalation_failed": 0,
+    "escalations_missed": 0,
+    "by_type": {
+      "routine": {
+        "total": 5,
+        "passed": 5
+      },
+      "edge": {
+        "total": 4,
+        "passed": 4
+      },
+      "ambiguous": {
+        "total": 2,
+        "passed": 2
+      },
+      "escalation": {
+        "total": 4,
+        "passed": 4
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "G01",
+      "type": "routine",
+      "title": "Renal lesion: MRI + bloods, 6 wk, consultant review (happy path)",
+      "source": "mock",
+      "passed": true,
+      "checks": [
+        {
+          "name": "requires_human_review",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "escalation_reasons",
+          "expected": [],
+          "actual": [],
+          "ok": true
+        },
+        {
+          "name": "investigations_extracted",
+          "expected": 2,
+          "actual": 2,
+          "ok": true
+        },
+        {
+          "name": "follow_up_weeks",
+          "expected": 6,
+          "actual": 6,
+          "ok": true
+        },
+        {
+          "name": "reviewer_role",
+          "expected": "consultant",
+          "actual": "consultant",
+          "ok": true
+        },
+        {
+          "name": "orders_placed",
+          "expected": 2,
+          "actual": 2,
+          "ok": true
+        },
+        {
+          "name": "appointment_booked",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "patient_messaged",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "open_alerts_at_end",
+          "expected": [
+            "appointment_at_risk",
+            "result_overdue"
+          ],
+          "actual": [
+            "appointment_at_risk",
+            "result_overdue"
+          ],
+          "ok": true
+        },
+        {
+          "name": "loop_status",
+          "expected": "open",
+          "actual": "open",
+          "ok": true
+        }
+      ],
+      "notes": [],
+      "expected_escalation": false
+    },
+    {
+      "id": "G02",
+      "type": "routine",
+      "title": "Bloods only, 4 wk, no reviewer named (defaults to author)",
+      "source": "mock",
+      "passed": true,
+      "checks": [
+        {
+          "name": "requires_human_review",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "escalation_reasons",
+          "expected": [],
+          "actual": [],
+          "ok": true
+        },
+        {
+          "name": "investigations_extracted",
+          "expected": 2,
+          "actual": 2,
+          "ok": true
+        },
+        {
+          "name": "follow_up_weeks",
+          "expected": 4,
+          "actual": 4,
+          "ok": true
+        },
+        {
+          "name": "reviewer_role",
+          "expected": "registrar",
+          "actual": "registrar",
+          "ok": true
+        },
+        {
+          "name": "flag:reviewer_defaulted",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "orders_placed",
+          "expected": 2,
+          "actual": 2,
+          "ok": true
+        },
+        {
+          "name": "appointment_booked",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "patient_messaged",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "loop_status",
+          "expected": "open",
+          "actual": "open",
+          "ok": true
+        }
+      ],
+      "notes": [],
+      "expected_escalation": false
+    },
+    {
+      "id": "G03",
+      "type": "routine",
+      "title": "Consultant orders CT, 8 wk own follow-up",
+      "source": "mock",
+      "passed": true,
+      "checks": [
+        {
+          "name": "requires_human_review",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "escalation_reasons",
+          "expected": [],
+          "actual": [],
+          "ok": true
+        },
+        {
+          "name": "investigations_extracted",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "follow_up_weeks",
+          "expected": 8,
+          "actual": 8,
+          "ok": true
+        },
+        {
+          "name": "reviewer_role",
+          "expected": "consultant",
+          "actual": "consultant",
+          "ok": true
+        },
+        {
+          "name": "orders_placed",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "appointment_booked",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "patient_messaged",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "loop_status",
+          "expected": "open",
+          "actual": "open",
+          "ok": true
+        }
+      ],
+      "notes": [],
+      "expected_escalation": false
+    },
+    {
+      "id": "G04",
+      "type": "edge",
+      "title": "Follow-up only, no investigations",
+      "source": "mock",
+      "passed": true,
+      "checks": [
+        {
+          "name": "requires_human_review",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "escalation_reasons",
+          "expected": [],
+          "actual": [],
+          "ok": true
+        },
+        {
+          "name": "investigations_extracted",
+          "expected": 0,
+          "actual": 0,
+          "ok": true
+        },
+        {
+          "name": "follow_up_weeks",
+          "expected": 12,
+          "actual": 12,
+          "ok": true
+        },
+        {
+          "name": "reviewer_role",
+          "expected": "consultant",
+          "actual": "consultant",
+          "ok": true
+        },
+        {
+          "name": "orders_placed",
+          "expected": 0,
+          "actual": 0,
+          "ok": true
+        },
+        {
+          "name": "appointment_booked",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "patient_messaged",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "loop_status",
+          "expected": "open",
+          "actual": "open",
+          "ok": true
+        }
+      ],
+      "notes": [],
+      "expected_escalation": false
+    },
+    {
+      "id": "G05",
+      "type": "edge",
+      "title": "Investigations but no follow-up (results to GP)",
+      "source": "mock",
+      "passed": true,
+      "checks": [
+        {
+          "name": "requires_human_review",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "escalation_reasons",
+          "expected": [],
+          "actual": [],
+          "ok": true
+        },
+        {
+          "name": "investigations_extracted",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "follow_up_weeks",
+          "expected": null,
+          "actual": null,
+          "ok": true
+        },
+        {
+          "name": "flag:no_follow_up",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "orders_placed",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "appointment_booked",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "patient_messaged",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "loop_status",
+          "expected": "open",
+          "actual": "open",
+          "ok": true
+        }
+      ],
+      "notes": [],
+      "expected_escalation": false
+    },
+    {
+      "id": "G06",
+      "type": "routine",
+      "title": "Urgent CT with 3 wk follow-up (just after imaging turnaround)",
+      "source": "mock",
+      "passed": true,
+      "checks": [
+        {
+          "name": "requires_human_review",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "escalation_reasons",
+          "expected": [],
+          "actual": [],
+          "ok": true
+        },
+        {
+          "name": "investigations_extracted",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "follow_up_weeks",
+          "expected": 3,
+          "actual": 3,
+          "ok": true
+        },
+        {
+          "name": "reviewer_role",
+          "expected": "consultant",
+          "actual": "consultant",
+          "ok": true
+        },
+        {
+          "name": "urgency",
+          "expected": [
+            "urgent"
+          ],
+          "actual": [
+            "urgent"
+          ],
+          "ok": true
+        },
+        {
+          "name": "orders_placed",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "appointment_booked",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "patient_messaged",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "loop_status",
+          "expected": "open",
+          "actual": "open",
+          "ok": true
+        }
+      ],
+      "notes": [],
+      "expected_escalation": false
+    },
+    {
+      "id": "G07",
+      "type": "edge",
+      "title": "Biopsy with 4 wk follow-up (biopsy turnaround 21 d fits)",
+      "source": "mock",
+      "passed": true,
+      "checks": [
+        {
+          "name": "requires_human_review",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "escalation_reasons",
+          "expected": [],
+          "actual": [],
+          "ok": true
+        },
+        {
+          "name": "investigations_extracted",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "follow_up_weeks",
+          "expected": 4,
+          "actual": 4,
+          "ok": true
+        },
+        {
+          "name": "reviewer_role",
+          "expected": "consultant",
+          "actual": "consultant",
+          "ok": true
+        },
+        {
+          "name": "orders_placed",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "appointment_booked",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "patient_messaged",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "loop_status",
+          "expected": "open",
+          "actual": "open",
+          "ok": true
+        }
+      ],
+      "notes": [],
+      "expected_escalation": false
+    },
+    {
+      "id": "G08",
+      "type": "edge",
+      "title": "Interval given in days (10 days -> 1 wk), bloods only",
+      "source": "mock",
+      "passed": true,
+      "checks": [
+        {
+          "name": "requires_human_review",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "escalation_reasons",
+          "expected": [],
+          "actual": [],
+          "ok": true
+        },
+        {
+          "name": "investigations_extracted",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "follow_up_weeks",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "reviewer_role",
+          "expected": "registrar",
+          "actual": "registrar",
+          "ok": true
+        },
+        {
+          "name": "orders_placed",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "appointment_booked",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "patient_messaged",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "loop_status",
+          "expected": "open",
+          "actual": "open",
+          "ok": true
+        }
+      ],
+      "notes": [],
+      "expected_escalation": false
+    },
+    {
+      "id": "G09",
+      "type": "ambiguous",
+      "title": "Conflicting follow-up intervals in note (2 wk vs 3 months)",
+      "source": "mock",
+      "passed": true,
+      "checks": [
+        {
+          "name": "requires_human_review",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "escalation_reasons",
+          "expected": [
+            "conflicting_follow_up_interval"
+          ],
+          "actual": [
+            "conflicting_follow_up_interval"
+          ],
+          "ok": true
+        },
+        {
+          "name": "investigations_extracted",
+          "expected": 3,
+          "actual": 3,
+          "ok": true
+        },
+        {
+          "name": "orders_placed",
+          "expected": 0,
+          "actual": 0,
+          "ok": true
+        },
+        {
+          "name": "appointment_booked",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "patient_messaged",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "no_actions_on_escalation",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "loop_status",
+          "expected": "needs_review",
+          "actual": "needs_review",
+          "ok": true
+        }
+      ],
+      "notes": [],
+      "expected_escalation": true
+    },
+    {
+      "id": "G10",
+      "type": "ambiguous",
+      "title": "Follow-up requested but no interval stated",
+      "source": "mock",
+      "passed": true,
+      "checks": [
+        {
+          "name": "requires_human_review",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "escalation_reasons",
+          "expected": [
+            "missing_follow_up_interval"
+          ],
+          "actual": [
+            "missing_follow_up_interval"
+          ],
+          "ok": true
+        },
+        {
+          "name": "investigations_extracted",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "orders_placed",
+          "expected": 0,
+          "actual": 0,
+          "ok": true
+        },
+        {
+          "name": "appointment_booked",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "patient_messaged",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "no_actions_on_escalation",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "loop_status",
+          "expected": "needs_review",
+          "actual": "needs_review",
+          "ok": true
+        }
+      ],
+      "notes": [],
+      "expected_escalation": true
+    },
+    {
+      "id": "G11",
+      "type": "escalation",
+      "title": "Investigation with no clinical indication",
+      "source": "mock",
+      "passed": true,
+      "checks": [
+        {
+          "name": "requires_human_review",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "escalation_reasons",
+          "expected": [
+            "missing_indication"
+          ],
+          "actual": [
+            "missing_indication"
+          ],
+          "ok": true
+        },
+        {
+          "name": "investigations_extracted",
+          "expected": 2,
+          "actual": 2,
+          "ok": true
+        },
+        {
+          "name": "orders_placed",
+          "expected": 0,
+          "actual": 0,
+          "ok": true
+        },
+        {
+          "name": "appointment_booked",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "patient_messaged",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "no_actions_on_escalation",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "loop_status",
+          "expected": "needs_review",
+          "actual": "needs_review",
+          "ok": true
+        }
+      ],
+      "notes": [],
+      "expected_escalation": true
+    },
+    {
+      "id": "G12",
+      "type": "escalation",
+      "title": "Follow-up booked before results can be back (biopsy, 2 wk)",
+      "source": "mock",
+      "passed": true,
+      "checks": [
+        {
+          "name": "requires_human_review",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "escalation_reasons",
+          "expected": [
+            "follow_up_before_results"
+          ],
+          "actual": [
+            "follow_up_before_results"
+          ],
+          "ok": true
+        },
+        {
+          "name": "investigations_extracted",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "orders_placed",
+          "expected": 0,
+          "actual": 0,
+          "ok": true
+        },
+        {
+          "name": "appointment_booked",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "patient_messaged",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "no_actions_on_escalation",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "loop_status",
+          "expected": "needs_review",
+          "actual": "needs_review",
+          "ok": true
+        }
+      ],
+      "notes": [],
+      "expected_escalation": true
+    },
+    {
+      "id": "G13",
+      "type": "escalation",
+      "title": "Two problems at once: no indication AND follow-up too early",
+      "source": "mock",
+      "passed": true,
+      "checks": [
+        {
+          "name": "requires_human_review",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "escalation_reasons",
+          "expected": [
+            "follow_up_before_results",
+            "missing_indication"
+          ],
+          "actual": [
+            "follow_up_before_results",
+            "missing_indication"
+          ],
+          "ok": true
+        },
+        {
+          "name": "investigations_extracted",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "orders_placed",
+          "expected": 0,
+          "actual": 0,
+          "ok": true
+        },
+        {
+          "name": "appointment_booked",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "patient_messaged",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "no_actions_on_escalation",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "loop_status",
+          "expected": "needs_review",
+          "actual": "needs_review",
+          "ok": true
+        }
+      ],
+      "notes": [],
+      "expected_escalation": true
+    },
+    {
+      "id": "G14",
+      "type": "escalation",
+      "title": "Scan put on hold by radiology -> clinician must engage; resolved with new date",
+      "source": "mock",
+      "passed": true,
+      "checks": [
+        {
+          "name": "requires_human_review",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "escalation_reasons",
+          "expected": [],
+          "actual": [],
+          "ok": true
+        },
+        {
+          "name": "investigations_extracted",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "follow_up_weeks",
+          "expected": 6,
+          "actual": 6,
+          "ok": true
+        },
+        {
+          "name": "reviewer_role",
+          "expected": "consultant",
+          "actual": "consultant",
+          "ok": true
+        },
+        {
+          "name": "orders_placed",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "appointment_booked",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "patient_messaged",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "alerts@2026-09-08",
+          "expected": [
+            "investigation_on_hold"
+          ],
+          "actual": [
+            "investigation_on_hold"
+          ],
+          "ok": true
+        },
+        {
+          "name": "open_alerts_at_end",
+          "expected": [],
+          "actual": [],
+          "ok": true
+        },
+        {
+          "name": "loop_status",
+          "expected": "open",
+          "actual": "open",
+          "ok": true
+        }
+      ],
+      "notes": [],
+      "expected_escalation": false
+    },
+    {
+      "id": "G15",
+      "type": "routine",
+      "title": "Results back on time, appointment date passes, clinician closes loop",
+      "source": "mock",
+      "passed": true,
+      "checks": [
+        {
+          "name": "requires_human_review",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "escalation_reasons",
+          "expected": [],
+          "actual": [],
+          "ok": true
+        },
+        {
+          "name": "investigations_extracted",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "follow_up_weeks",
+          "expected": 2,
+          "actual": 2,
+          "ok": true
+        },
+        {
+          "name": "reviewer_role",
+          "expected": "consultant",
+          "actual": "consultant",
+          "ok": true
+        },
+        {
+          "name": "orders_placed",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "appointment_booked",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "patient_messaged",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "alerts@2026-09-22",
+          "expected": [
+            "appointment_passed"
+          ],
+          "actual": [
+            "appointment_passed"
+          ],
+          "ok": true
+        },
+        {
+          "name": "open_alerts_at_end",
+          "expected": [],
+          "actual": [],
+          "ok": true
+        },
+        {
+          "name": "loop_status",
+          "expected": "closed",
+          "actual": "closed",
+          "ok": true
+        },
+        {
+          "name": "item_statuses",
+          "expected": [
+            "reviewed"
+          ],
+          "actual": [
+            "reviewed"
+          ],
+          "ok": true
+        }
+      ],
+      "notes": [],
+      "expected_escalation": false
+    }
+  ]
+}

@@ -1,0 +1,798 @@
+{
+  "description": "PlugPoint gold evaluation set - synthetic notes and patients only. Expected values are the workflow behaviour the team specified; they are not clinical rules.",
+  "cases": [
+    {
+      "id": "G01",
+      "type": "routine",
+      "title": "Renal lesion: MRI + bloods, 6 wk, consultant review (happy path)",
+      "input": {
+        "patient_id": "P001",
+        "clinician": {
+          "name": "Dr Sam Patel",
+          "role": "registrar"
+        },
+        "note": "Urology clinic 05/09/2026. 58F, microscopic haematuria. Ultrasound: 3.2 cm indeterminate left renal lesion. Last creatinine 108 (borderline).\n\nPlan: MRI abdomen with contrast to characterise the left renal lesion. Repeat U&E and eGFR before the MRI given the borderline creatinine. Follow up in clinic in 6 weeks with the results - please book with Mr Hollis (consultant).",
+        "mock_plan": {
+          "investigations": [
+            {
+              "name": "MRI abdomen with contrast",
+              "category": "imaging",
+              "reason": "Characterise 3.2 cm indeterminate left renal lesion",
+              "urgency": "routine",
+              "evidence": "MRI abdomen with contrast"
+            },
+            {
+              "name": "U&E and eGFR",
+              "category": "bloods",
+              "reason": "Borderline creatinine before contrast MRI",
+              "urgency": "routine",
+              "evidence": "U&E and eGFR"
+            }
+          ],
+          "follow_up": {
+            "interval_weeks": 6,
+            "interval_candidates_weeks": [
+              6
+            ],
+            "reviewer_role": "consultant",
+            "purpose": "Review results",
+            "evidence": ""
+          },
+          "ambiguities": []
+        }
+      },
+      "steps": [
+        {
+          "result": "bloods"
+        },
+        {
+          "advance_days": 35
+        }
+      ],
+      "expected": {
+        "requires_human_review": false,
+        "reasons": [],
+        "investigations": 2,
+        "follow_up_weeks": 6,
+        "reviewer_role": "consultant",
+        "actions": {
+          "orders": 2,
+          "appointment_booked": true,
+          "patient_messaged": true
+        },
+        "alerts": [
+          "appointment_at_risk",
+          "result_overdue"
+        ],
+        "loop_status": "open"
+      }
+    },
+    {
+      "id": "G02",
+      "type": "routine",
+      "title": "Bloods only, 4 wk, no reviewer named (defaults to author)",
+      "input": {
+        "patient_id": "P003",
+        "clinician": {
+          "name": "Dr Sam Patel",
+          "role": "registrar"
+        },
+        "note": "Hepatology clinic. 45F, fatty liver disease. Plan: repeat LFTs and lipid profile to monitor response to lifestyle changes. Follow up in 4 weeks.",
+        "mock_plan": {
+          "investigations": [
+            {
+              "name": "LFTs",
+              "category": "bloods",
+              "reason": "Monitor fatty liver disease",
+              "urgency": "routine",
+              "evidence": "LFTs"
+            },
+            {
+              "name": "Lipid profile",
+              "category": "bloods",
+              "reason": "Monitor response to lifestyle changes",
+              "urgency": "routine",
+              "evidence": "Lipid profile"
+            }
+          ],
+          "follow_up": {
+            "interval_weeks": 4,
+            "interval_candidates_weeks": [
+              4
+            ],
+            "reviewer_role": null,
+            "purpose": "Review results",
+            "evidence": ""
+          },
+          "ambiguities": []
+        }
+      },
+      "expected": {
+        "requires_human_review": false,
+        "reasons": [],
+        "investigations": 2,
+        "follow_up_weeks": 4,
+        "reviewer_role": "registrar",
+        "flags_include": [
+          "reviewer_defaulted"
+        ],
+        "actions": {
+          "orders": 2,
+          "appointment_booked": true,
+          "patient_messaged": true
+        },
+        "loop_status": "open"
+      }
+    },
+    {
+      "id": "G03",
+      "type": "routine",
+      "title": "Consultant orders CT, 8 wk own follow-up",
+      "input": {
+        "patient_id": "P002",
+        "clinician": {
+          "name": "Dr Elena Fischer",
+          "role": "consultant"
+        },
+        "note": "Respiratory clinic. 64M, ex-smoker, chronic cough. Plan: CT chest to assess for bronchiectasis. I will see him again in 8 weeks with the CT.",
+        "mock_plan": {
+          "investigations": [
+            {
+              "name": "CT chest",
+              "category": "imaging",
+              "reason": "Assess for bronchiectasis in ex-smoker with chronic cough",
+              "urgency": "routine",
+              "evidence": "CT chest"
+            }
+          ],
+          "follow_up": {
+            "interval_weeks": 8,
+            "interval_candidates_weeks": [
+              8
+            ],
+            "reviewer_role": "consultant",
+            "purpose": "Review results",
+            "evidence": ""
+          },
+          "ambiguities": []
+        }
+      },
+      "expected": {
+        "requires_human_review": false,
+        "reasons": [],
+        "investigations": 1,
+        "follow_up_weeks": 8,
+        "reviewer_role": "consultant",
+        "actions": {
+          "orders": 1,
+          "appointment_booked": true,
+          "patient_messaged": true
+        },
+        "loop_status": "open"
+      }
+    },
+    {
+      "id": "G04",
+      "type": "edge",
+      "title": "Follow-up only, no investigations",
+      "input": {
+        "patient_id": "P004",
+        "clinician": {
+          "name": "Dr Elena Fischer",
+          "role": "consultant"
+        },
+        "note": "Respiratory clinic. 71M, stable COPD, no change to inhalers. No investigations needed. Routine review in 12 weeks.",
+        "mock_plan": {
+          "investigations": [],
+          "follow_up": {
+            "interval_weeks": 12,
+            "interval_candidates_weeks": [
+              12
+            ],
+            "reviewer_role": "consultant",
+            "purpose": "Routine COPD review",
+            "evidence": ""
+          },
+          "ambiguities": []
+        }
+      },
+      "expected": {
+        "requires_human_review": false,
+        "reasons": [],
+        "investigations": 0,
+        "follow_up_weeks": 12,
+        "reviewer_role": "consultant",
+        "actions": {
+          "orders": 0,
+          "appointment_booked": true,
+          "patient_messaged": true
+        },
+        "loop_status": "open"
+      }
+    },
+    {
+      "id": "G05",
+      "type": "edge",
+      "title": "Investigations but no follow-up (results to GP)",
+      "input": {
+        "patient_id": "P001",
+        "clinician": {
+          "name": "Dr Sam Patel",
+          "role": "registrar"
+        },
+        "note": "Urology clinic. 58F. Plan: repeat urine cytology to complete haematuria work-up. No further clinic follow-up needed; results to GP by letter and discharge.",
+        "mock_plan": {
+          "investigations": [
+            {
+              "name": "Urine cytology",
+              "category": "other",
+              "reason": "Complete haematuria work-up",
+              "urgency": "routine",
+              "evidence": "Urine cytology"
+            }
+          ],
+          "follow_up": null,
+          "ambiguities": []
+        }
+      },
+      "expected": {
+        "requires_human_review": false,
+        "reasons": [],
+        "investigations": 1,
+        "follow_up_weeks": null,
+        "flags_include": [
+          "no_follow_up"
+        ],
+        "actions": {
+          "orders": 1,
+          "appointment_booked": false,
+          "patient_messaged": false
+        },
+        "loop_status": "open"
+      }
+    },
+    {
+      "id": "G06",
+      "type": "routine",
+      "title": "Urgent CT with 3 wk follow-up (just after imaging turnaround)",
+      "input": {
+        "patient_id": "P002",
+        "clinician": {
+          "name": "Dr Elena Fischer",
+          "role": "consultant"
+        },
+        "note": "Respiratory clinic. 64M, haemoptysis x2 this week, 40 pack-years. Plan: urgent CT chest with contrast to exclude malignancy. Review in 3 weeks with the result.",
+        "mock_plan": {
+          "investigations": [
+            {
+              "name": "CT chest with contrast",
+              "category": "imaging",
+              "reason": "Exclude malignancy - haemoptysis in heavy smoker",
+              "urgency": "urgent",
+              "evidence": "CT chest with contrast"
+            }
+          ],
+          "follow_up": {
+            "interval_weeks": 3,
+            "interval_candidates_weeks": [
+              3
+            ],
+            "reviewer_role": "consultant",
+            "purpose": "Review CT",
+            "evidence": ""
+          },
+          "ambiguities": []
+        }
+      },
+      "expected": {
+        "requires_human_review": false,
+        "reasons": [],
+        "investigations": 1,
+        "follow_up_weeks": 3,
+        "reviewer_role": "consultant",
+        "urgency": [
+          "urgent"
+        ],
+        "actions": {
+          "orders": 1,
+          "appointment_booked": true,
+          "patient_messaged": true
+        },
+        "loop_status": "open"
+      }
+    },
+    {
+      "id": "G07",
+      "type": "edge",
+      "title": "Biopsy with 4 wk follow-up (biopsy turnaround 21 d fits)",
+      "input": {
+        "patient_id": "P003",
+        "clinician": {
+          "name": "Dr Elena Fischer",
+          "role": "consultant"
+        },
+        "note": "Hepatology clinic. 45F, NAFLD, FIB-4 rising. Plan: liver biopsy to stage fibrosis. See in 4 weeks with histology.",
+        "mock_plan": {
+          "investigations": [
+            {
+              "name": "Liver biopsy",
+              "category": "biopsy",
+              "reason": "Stage fibrosis - rising FIB-4 in NAFLD",
+              "urgency": "routine",
+              "evidence": "Liver biopsy"
+            }
+          ],
+          "follow_up": {
+            "interval_weeks": 4,
+            "interval_candidates_weeks": [
+              4
+            ],
+            "reviewer_role": "consultant",
+            "purpose": "Review histology",
+            "evidence": ""
+          },
+          "ambiguities": []
+        }
+      },
+      "expected": {
+        "requires_human_review": false,
+        "reasons": [],
+        "investigations": 1,
+        "follow_up_weeks": 4,
+        "reviewer_role": "consultant",
+        "actions": {
+          "orders": 1,
+          "appointment_booked": true,
+          "patient_messaged": true
+        },
+        "loop_status": "open"
+      }
+    },
+    {
+      "id": "G08",
+      "type": "edge",
+      "title": "Interval given in days (10 days -> 1 wk), bloods only",
+      "input": {
+        "patient_id": "P004",
+        "clinician": {
+          "name": "Dr Sam Patel",
+          "role": "registrar"
+        },
+        "note": "Respiratory clinic. 71M started on new diuretic. Plan: U&E in 1 week to check potassium. See again in 10 days.",
+        "mock_plan": {
+          "investigations": [
+            {
+              "name": "U&E",
+              "category": "bloods",
+              "reason": "Check potassium after starting diuretic",
+              "urgency": "routine",
+              "evidence": "U&E"
+            }
+          ],
+          "follow_up": {
+            "interval_weeks": 1,
+            "interval_candidates_weeks": [
+              1
+            ],
+            "reviewer_role": null,
+            "purpose": "Review U&E on new diuretic",
+            "evidence": ""
+          },
+          "ambiguities": []
+        }
+      },
+      "expected": {
+        "requires_human_review": false,
+        "reasons": [],
+        "investigations": 1,
+        "follow_up_weeks": 1,
+        "reviewer_role": "registrar",
+        "actions": {
+          "orders": 1,
+          "appointment_booked": true,
+          "patient_messaged": true
+        },
+        "loop_status": "open"
+      }
+    },
+    {
+      "id": "G09",
+      "type": "ambiguous",
+      "title": "Conflicting follow-up intervals in note (2 wk vs 3 months)",
+      "input": {
+        "patient_id": "P002",
+        "clinician": {
+          "name": "Dr Sam Patel",
+          "role": "registrar"
+        },
+        "note": "Respiratory clinic. 64M, cough 8 weeks, possible RUL opacity on CXR. Plan: CT chest with contrast. See in clinic in 2 weeks to discuss. Bloods today: FBC, CRP.\n\nAddendum: for follow-up, review in 3 months with the CT result.",
+        "mock_plan": {
+          "investigations": [
+            {
+              "name": "CT chest with contrast",
+              "category": "imaging",
+              "reason": "Evaluate RUL opacity",
+              "urgency": "routine",
+              "evidence": "CT chest with contrast"
+            },
+            {
+              "name": "FBC",
+              "category": "bloods",
+              "reason": "Baseline bloods",
+              "urgency": "routine",
+              "evidence": "FBC"
+            },
+            {
+              "name": "CRP",
+              "category": "bloods",
+              "reason": "Baseline bloods",
+              "urgency": "routine",
+              "evidence": "CRP"
+            }
+          ],
+          "follow_up": {
+            "interval_weeks": null,
+            "interval_candidates_weeks": [
+              2,
+              12
+            ],
+            "reviewer_role": "registrar",
+            "purpose": "Review results",
+            "evidence": ""
+          },
+          "ambiguities": [
+            "Note states both 2 weeks and 3 months."
+          ]
+        }
+      },
+      "expected": {
+        "requires_human_review": true,
+        "reasons": [
+          "conflicting_follow_up_interval"
+        ],
+        "investigations": 3,
+        "actions": {
+          "orders": 0,
+          "appointment_booked": false,
+          "patient_messaged": false
+        },
+        "loop_status": "needs_review"
+      }
+    },
+    {
+      "id": "G10",
+      "type": "ambiguous",
+      "title": "Follow-up requested but no interval stated",
+      "input": {
+        "patient_id": "P001",
+        "clinician": {
+          "name": "Dr Sam Patel",
+          "role": "registrar"
+        },
+        "note": "Urology clinic. 58F. Plan: CT urogram to assess upper tracts. Follow up in clinic with the result.",
+        "mock_plan": {
+          "investigations": [
+            {
+              "name": "CT urogram",
+              "category": "imaging",
+              "reason": "Assess upper tracts",
+              "urgency": "routine",
+              "evidence": "CT urogram"
+            }
+          ],
+          "follow_up": {
+            "interval_weeks": null,
+            "interval_candidates_weeks": [],
+            "reviewer_role": null,
+            "purpose": "Review CT",
+            "evidence": ""
+          },
+          "ambiguities": [
+            "No follow-up interval stated."
+          ]
+        }
+      },
+      "expected": {
+        "requires_human_review": true,
+        "reasons": [
+          "missing_follow_up_interval"
+        ],
+        "investigations": 1,
+        "actions": {
+          "orders": 0,
+          "appointment_booked": false,
+          "patient_messaged": false
+        },
+        "loop_status": "needs_review"
+      }
+    },
+    {
+      "id": "G11",
+      "type": "escalation",
+      "title": "Investigation with no clinical indication",
+      "input": {
+        "patient_id": "P003",
+        "clinician": {
+          "name": "Dr Elena Fischer",
+          "role": "consultant"
+        },
+        "note": "Hepatology clinic. 45F, known fatty liver disease, LFTs stable. Plan: liver biopsy. Repeat LFTs. Follow up in 4 weeks.",
+        "mock_plan": {
+          "investigations": [
+            {
+              "name": "Liver biopsy",
+              "category": "biopsy",
+              "reason": null,
+              "urgency": "routine",
+              "evidence": "Liver biopsy"
+            },
+            {
+              "name": "LFTs",
+              "category": "bloods",
+              "reason": "Monitoring of fatty liver disease",
+              "urgency": "routine",
+              "evidence": "LFTs"
+            }
+          ],
+          "follow_up": {
+            "interval_weeks": 4,
+            "interval_candidates_weeks": [
+              4
+            ],
+            "reviewer_role": null,
+            "purpose": "Review results",
+            "evidence": ""
+          },
+          "ambiguities": [
+            "No indication given for the liver biopsy."
+          ]
+        }
+      },
+      "expected": {
+        "requires_human_review": true,
+        "reasons": [
+          "missing_indication"
+        ],
+        "investigations": 2,
+        "actions": {
+          "orders": 0,
+          "appointment_booked": false,
+          "patient_messaged": false
+        },
+        "loop_status": "needs_review"
+      }
+    },
+    {
+      "id": "G12",
+      "type": "escalation",
+      "title": "Follow-up booked before results can be back (biopsy, 2 wk)",
+      "input": {
+        "patient_id": "P004",
+        "clinician": {
+          "name": "Dr Elena Fischer",
+          "role": "consultant"
+        },
+        "note": "Respiratory clinic. 71M, PET-avid RUL nodule. Plan: CT-guided lung biopsy for histology. See in clinic in 2 weeks with the histology result.",
+        "mock_plan": {
+          "investigations": [
+            {
+              "name": "CT-guided lung biopsy",
+              "category": "biopsy",
+              "reason": "Tissue diagnosis of PET-avid RUL nodule",
+              "urgency": "urgent",
+              "evidence": "CT-guided lung biopsy"
+            }
+          ],
+          "follow_up": {
+            "interval_weeks": 2,
+            "interval_candidates_weeks": [
+              2
+            ],
+            "reviewer_role": "consultant",
+            "purpose": "Discuss histology",
+            "evidence": ""
+          },
+          "ambiguities": []
+        }
+      },
+      "expected": {
+        "requires_human_review": true,
+        "reasons": [
+          "follow_up_before_results"
+        ],
+        "investigations": 1,
+        "actions": {
+          "orders": 0,
+          "appointment_booked": false,
+          "patient_messaged": false
+        },
+        "loop_status": "needs_review"
+      }
+    },
+    {
+      "id": "G13",
+      "type": "escalation",
+      "title": "Two problems at once: no indication AND follow-up too early",
+      "input": {
+        "patient_id": "P002",
+        "clinician": {
+          "name": "Dr Sam Patel",
+          "role": "registrar"
+        },
+        "note": "Respiratory clinic. 64M. Plan: bronchoscopy. See in 1 week.",
+        "mock_plan": {
+          "investigations": [
+            {
+              "name": "Bronchoscopy",
+              "category": "biopsy",
+              "reason": null,
+              "urgency": "routine",
+              "evidence": "Bronchoscopy"
+            }
+          ],
+          "follow_up": {
+            "interval_weeks": 1,
+            "interval_candidates_weeks": [
+              1
+            ],
+            "reviewer_role": null,
+            "purpose": "Review results",
+            "evidence": ""
+          },
+          "ambiguities": [
+            "No indication for bronchoscopy."
+          ]
+        }
+      },
+      "expected": {
+        "requires_human_review": true,
+        "reasons": [
+          "follow_up_before_results",
+          "missing_indication"
+        ],
+        "investigations": 1,
+        "actions": {
+          "orders": 0,
+          "appointment_booked": false,
+          "patient_messaged": false
+        },
+        "loop_status": "needs_review"
+      }
+    },
+    {
+      "id": "G14",
+      "type": "escalation",
+      "title": "Scan put on hold by radiology -> clinician must engage; resolved with new date",
+      "input": {
+        "patient_id": "P001",
+        "clinician": {
+          "name": "Dr Sam Patel",
+          "role": "registrar"
+        },
+        "note": "Urology clinic. 58F. Plan: MRI abdomen with contrast to characterise left renal lesion. Follow up in 6 weeks with Mr Hollis.",
+        "mock_plan": {
+          "investigations": [
+            {
+              "name": "MRI abdomen with contrast",
+              "category": "imaging",
+              "reason": "Characterise left renal lesion",
+              "urgency": "routine",
+              "evidence": "MRI abdomen with contrast"
+            }
+          ],
+          "follow_up": {
+            "interval_weeks": 6,
+            "interval_candidates_weeks": [
+              6
+            ],
+            "reviewer_role": "consultant",
+            "purpose": "Review results",
+            "evidence": ""
+          },
+          "ambiguities": []
+        }
+      },
+      "steps": [
+        {
+          "advance_days": 3
+        },
+        {
+          "hold": "imaging"
+        },
+        {
+          "expect_alerts": [
+            "investigation_on_hold"
+          ]
+        },
+        {
+          "resolve_hold": "imaging",
+          "expected_in_days": 21
+        }
+      ],
+      "expected": {
+        "requires_human_review": false,
+        "reasons": [],
+        "investigations": 1,
+        "follow_up_weeks": 6,
+        "reviewer_role": "consultant",
+        "actions": {
+          "orders": 1,
+          "appointment_booked": true,
+          "patient_messaged": true
+        },
+        "alerts": [],
+        "loop_status": "open"
+      }
+    },
+    {
+      "id": "G15",
+      "type": "routine",
+      "title": "Results back on time, appointment date passes, clinician closes loop",
+      "input": {
+        "patient_id": "P003",
+        "clinician": {
+          "name": "Dr Elena Fischer",
+          "role": "consultant"
+        },
+        "note": "Hepatology clinic. 45F. Plan: repeat LFTs. Review in 2 weeks.",
+        "mock_plan": {
+          "investigations": [
+            {
+              "name": "LFTs",
+              "category": "bloods",
+              "reason": "Monitor liver function",
+              "urgency": "routine",
+              "evidence": "LFTs"
+            }
+          ],
+          "follow_up": {
+            "interval_weeks": 2,
+            "interval_candidates_weeks": [
+              2
+            ],
+            "reviewer_role": "consultant",
+            "purpose": "Review results",
+            "evidence": ""
+          },
+          "ambiguities": []
+        }
+      },
+      "steps": [
+        {
+          "advance_days": 2
+        },
+        {
+          "result": "bloods"
+        },
+        {
+          "advance_days": 15
+        },
+        {
+          "expect_alerts": [
+            "appointment_passed"
+          ]
+        },
+        {
+          "close": true
+        }
+      ],
+      "expected": {
+        "requires_human_review": false,
+        "reasons": [],
+        "investigations": 1,
+        "follow_up_weeks": 2,
+        "reviewer_role": "consultant",
+        "actions": {
+          "orders": 1,
+          "appointment_booked": true,
+          "patient_messaged": true
+        },
+        "alerts": [],
+        "loop_status": "closed",
+        "item_statuses": [
+          "reviewed"
+        ]
+      }
+    }
+  ]
+}

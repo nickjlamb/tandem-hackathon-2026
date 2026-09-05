@@ -16,7 +16,7 @@ PlugPoint turns the clinic note's plan into a tracked action plan. The clinician
 - **Check** (deterministic rules): every investigation has an indication; one unambiguous follow-up interval; the appointment falls after results are expected.
 - **Approve** (clinician): one click. Nothing is ordered or booked until then. Ambiguous plans stop here.
 - **Act** (mocked integrations): order investigations, book follow-up with the right clinician, message the patient, write to the EPR.
-- **Track** (deterministic): every item has an expected-by date. Overdue results and appointments at risk raise an alert to a named owner, with rebook/chase actions.
+- **Track** (deterministic): every item has an expected-by date. Overdue results, appointments at risk and investigations put on hold by a department raise an alert to a named owner, with chase / rebook / hold-resolved actions.
 - **Audit**: every step labelled AI / RULE / HUMAN / API / SYSTEM.
 
 ## Workflow
@@ -45,7 +45,14 @@ See [`docs/architecture.md`](docs/architecture.md).
 
 ## Evaluation
 
-See [`docs/evaluation.md`](docs/evaluation.md). _Gold set: TODO (P2)._
+15 synthetic gold cases in [`eval/cases.json`](eval/cases.json) — routine, edge, ambiguous/conflicting and must-escalate — each storing the synthetic note, the expected plan/gate output, the expected escalation status and the expected downstream actions (orders, booking, patient message) plus scripted tracker events (results arriving, delays, a scan put on hold). [`eval/run_eval.py`](eval/run_eval.py) pushes every case through the **same** workflow classes the app uses and compares programmatically; nothing in the workflow is tuned for the eval and failures are reported as found.
+
+```bash
+python -m eval.run_eval --offline    # rules + gate + tracker, no network, ~1 s
+python -m eval.run_eval              # live Claude extraction if ANTHROPIC_API_KEY is set (~1 min)
+```
+
+Results are shown at http://localhost:8000/eval (tiles: passed / failed / % / escalation cases / escalations missed) and written to `eval/results.json`. Latest offline run: **15/15, 5/5 escalation cases, 0 escalations auto-actioned**.
 
 ## Demo
 
@@ -58,6 +65,8 @@ cp .env.example .env            # optional: add ANTHROPIC_API_KEY to extract fre
 Without an API key the three built-in sample notes still run end to end using offline fixtures (identical shape to the live extraction), so the demo does not depend on wifi.
 
 Terminal-only run of the happy path: `python -m plugpoint.cli` (or `python -m plugpoint.cli B_conflict`).
+
+Sample notes: A routine happy path · B conflicting intervals · C missing indication · D follow-up before results. "simulate hold" on an imaging item shows the on-hold escalation.
 
 **Demo script (≈2 min):** sample A → Extract → 5 checks pass → Approve → orders, booking, SMS, EPR in the audit trail → "simulate result" for bloods → +4 weeks, +1 week → MRI overdue + appointment at risk → Rebook after results → follow-up moved, patient told. Then sample B → conflicting intervals → system refuses to guess, clinician picks.
 

@@ -43,6 +43,8 @@
   .pill.needs_review{background:#fdecea;color:var(--bad);border-color:#f5c2bd}
   .pill.overdue{background:#fdecea;color:var(--bad);border-color:#f5c2bd}
   .pill.at_risk{background:#fff3e0;color:var(--human);border-color:#f5d9a8}
+  .pill.on_hold{background:#f3e8ff;color:var(--ai);border-color:#d9c7f5}
+  .alert.investigation_on_hold{border-left-color:var(--ai);background:#faf6ff}
   .pill.booked{background:#e6f5ee;color:var(--ok);border-color:#bfe5d2}
   .chip{display:inline-block;font-size:11px;padding:1px 7px;border-radius:5px;background:#eef2f7;color:var(--muted)}
   .actor{display:inline-block;min-width:58px;text-align:center;font-size:11px;font-weight:700;padding:1px 6px;border-radius:5px;color:#fff}
@@ -94,6 +96,7 @@
   <button class="small" onclick="advance(14)">+2 weeks</button>
   <button class="small" onclick="advance(28)">+4 weeks</button>
   <button class="small ghost" onclick="resetAll()">Reset demo</button>
+  <a href="/eval" class="badge" style="text-decoration:none;color:var(--ink);font-weight:600">Gold eval →</a>
 </header>
 
 <main>
@@ -236,6 +239,7 @@ async function approve(loopId) {
 }
 
 async function simulateResult(loopId, itemId) { STATE = await api('/api/simulate/result', {loop_id: loopId, item_id: itemId}); render(); }
+async function simulateHold(loopId, itemId) { STATE = await api('/api/simulate/hold', {loop_id: loopId, item_id: itemId}); render(); }
 async function advance(days) { STATE = await api(`/api/simulate/advance?days=${days}`, {}); render(); }
 async function resetAll() { STATE = await api('/api/reset', {}); ACTIVE_LOOP = null; render(); }
 async function action(kind, loopId, extra={}) {
@@ -358,9 +362,10 @@ function renderLoops() {
     const items = l.items.map(i => `
       <div class="item">
         <span class="name">${esc(i.name)}</span>
-        ${pill(i.status)} ${i.overdue ? pill('overdue') : ''}
+        ${pill(i.status)} ${i.overdue ? pill('overdue') : ''} ${i.on_hold ? pill('on_hold') : ''}
         ${i.status === 'result_awaited' ? `<span class="muted" style="font-size:11px">due ${fmt(i.expected_by)}</span>
-           <button class="small" onclick="simulateResult('${l.id}','${i.id}')">simulate result</button>` : ''}
+           <button class="small" onclick="event.stopPropagation();simulateResult('${l.id}','${i.id}')">simulate result</button>
+           ${!i.on_hold && i.category === 'imaging' ? `<button class="small ghost" onclick="event.stopPropagation();simulateHold('${l.id}','${i.id}')">simulate hold</button>` : ''}` : ''}
         ${i.status === 'result_received' ? `<span class="muted" style="font-size:11px">in ${fmt(i.result_on)}</span>` : ''}
       </div>`).join('');
     return `<div class="loop ${l.id === ACTIVE_LOOP ? 'active' : ''}" onclick="ACTIVE_LOOP='${l.id}';render()">
@@ -379,6 +384,8 @@ function renderAlerts() {
     const loop = STATE.loops.find(l => l.id === n.loop_id);
     const defaultDate = (() => { const d = new Date(STATE.today + 'T00:00:00'); d.setDate(d.getDate() + 14); return d.toISOString().slice(0,10); })();
     const btns = n.actions.map(a => {
+      if (a === 'resolve_hold') return `<span class="row" style="gap:4px"><span class="muted" style="font-size:11px">agreed with department — expected by</span><input type="date" id="rh-${n.id}" value="${defaultDate}" style="width:auto;padding:3px 6px;font-size:12px">
+          <button class="small" onclick="action('resolve_hold','${n.loop_id}',{item_id:'${n.item_id}', results_expected: document.getElementById('rh-${n.id}').value})">Hold resolved</button></span>`;
       if (a === 'chase') return `<button class="small" onclick="action('chase','${n.loop_id}',{item_id:'${n.item_id}'})">Chase department</button>`;
       if (a === 'acknowledge') return `<button class="small ghost" onclick="action('acknowledge','${n.loop_id}',{notification_id:'${n.id}'})">Acknowledge</button>`;
       if (a === 'keep') return `<button class="small ghost" onclick="action('keep','${n.loop_id}')">Keep appointment</button>`;

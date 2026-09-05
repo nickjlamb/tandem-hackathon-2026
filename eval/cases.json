@@ -450,7 +450,10 @@
         "reasons": [
           "conflicting_follow_up_interval"
         ],
-        "investigations": 3,
+        "investigations": [
+          2,
+          3
+        ],
         "actions": {
           "orders": 0,
           "appointment_booked": false,
@@ -614,20 +617,20 @@
       "type": "escalation",
       "title": "Two problems at once: no indication AND follow-up too early",
       "input": {
-        "patient_id": "P002",
+        "patient_id": "P003",
         "clinician": {
-          "name": "Dr Sam Patel",
-          "role": "registrar"
+          "name": "Dr Elena Fischer",
+          "role": "consultant"
         },
-        "note": "Respiratory clinic. 64M. Plan: bronchoscopy. See in 1 week.",
+        "note": "Hepatology clinic. 45F. Plan: liver biopsy. See in 1 week.",
         "mock_plan": {
           "investigations": [
             {
-              "name": "Bronchoscopy",
+              "name": "Liver biopsy",
               "category": "biopsy",
               "reason": null,
               "urgency": "routine",
-              "evidence": "Bronchoscopy"
+              "evidence": "Plan: liver biopsy."
             }
           ],
           "follow_up": {
@@ -640,7 +643,7 @@
             "evidence": ""
           },
           "ambiguities": [
-            "No indication for bronchoscopy."
+            "No indication for liver biopsy."
           ]
         }
       },
@@ -734,7 +737,7 @@
           "name": "Dr Elena Fischer",
           "role": "consultant"
         },
-        "note": "Hepatology clinic. 45F. Plan: repeat LFTs. Review in 2 weeks.",
+        "note": "Hepatology clinic. 45F, known fatty liver disease. Plan: repeat LFTs to monitor liver function. Review in 2 weeks.",
         "mock_plan": {
           "investigations": [
             {

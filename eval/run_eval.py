@@ -59,7 +59,11 @@ def run_case(case: dict) -> dict:
     # ---- plan stage: what the gate decided
     check("requires_human_review", exp["requires_human_review"], loop["gate"]["requires_human_review"])
     check("escalation_reasons", sorted(exp.get("reasons", [])), sorted(loop["gate"]["reasons"]))
-    check("investigations_extracted", exp["investigations"], len(loop["items"]))
+    n_items = len(loop["items"])
+    if isinstance(exp["investigations"], list):  # a range of acceptable counts (e.g. bloods listed together or apart)
+        check("investigations_extracted", exp["investigations"], exp["investigations"] if n_items in exp["investigations"] else n_items)
+    else:
+        check("investigations_extracted", exp["investigations"], n_items)
     if "follow_up_weeks" in exp and not exp["requires_human_review"]:
         check("follow_up_weeks", exp["follow_up_weeks"], loop["follow_up_weeks"])
     if "reviewer_role" in exp:
@@ -144,6 +148,8 @@ def run_all(offline: bool = False) -> dict:
     }
     out = {"summary": summary, "results": results}
     RESULTS_PATH.write_text(json.dumps(out, indent=2))
+    # keep the latest live and offline runs separately so one does not overwrite the other
+    (RESULTS_PATH.parent / f"results-{'live' if summary['mode'] == 'claude' else 'offline'}.json").write_text(json.dumps(out, indent=2))
     return out
 
 

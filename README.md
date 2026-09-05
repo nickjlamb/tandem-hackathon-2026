@@ -56,6 +56,8 @@ cp .env.example .env     # add ANTHROPIC_API_KEY=...
 
 Requirements: Python 3.11+. Tested on macOS and Linux.
 
+**Deploy in one click:** the repo includes a [`render.yaml`](render.yaml) blueprint — on [Render](https://render.com) choose *New → Blueprint*, pick this repo, and it's live on a free instance in a few minutes (add `ANTHROPIC_API_KEY` in the dashboard for live extraction). A `Procfile` is included for Railway / Heroku-style hosts.
+
 ## How it works
 
 <picture>

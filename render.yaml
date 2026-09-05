@@ -1,0 +1,16 @@
+# One-click deploy on Render (https://render.com): New → Blueprint → pick this repo.
+# Free tier is fine for a demo. Add ANTHROPIC_API_KEY in the dashboard to enable live extraction;
+# without it the app runs in offline-fixture mode, which is all the demo needs.
+services:
+  - type: web
+    name: plugpoint
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn plugpoint.app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/meta
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: ANTHROPIC_API_KEY
+        sync: false

@@ -58,44 +58,10 @@ Requirements: Python 3.11+. Tested on macOS and Linux.
 
 ## How it works
 
-```mermaid
-flowchart LR
-    N[Clinic note<br/><i>Tandem / dictation</i>] --> AI
-    subgraph AI[AI · one structured call]
-        X[Extract ActionPlan<br/>investigations · indications<br/>follow-up · reviewer]
-    end
-    AI --> R
-    subgraph R[RULE · deterministic]
-        C1[indication stated]
-        C2[single interval]
-        C3[appointment after results]
-        C4[reviewer resolved]
-    end
-    R -->|routine| H[HUMAN · approve<br/>edit · add · drop items]
-    R -->|blocked| D[HUMAN · decide<br/>choose interval · add indication]
-    D --> H
-    H --> A
-    subgraph A[API · mocked integrations]
-        O[Order comms]
-        P[PAS booking]
-        S[Patient SMS]
-        E[EPR record]
-    end
-    A --> T
-    subgraph T[SYSTEM · tracker]
-        T1[expected-by dates]
-        T2[overdue · at risk · on hold]
-        T3[alerts to named owner]
-    end
-    T -->|chase · rebook · resolve hold · close| H2[HUMAN]
-    H2 --> Z[(Loop closed<br/>results reviewed)]
-    classDef ai fill:#efe9fb,stroke:#6b4fbb,color:#2b1d5c
-    classDef rule fill:#e6f5ee,stroke:#1f8a5b,color:#0f4a30
-    classDef human fill:#fff3e0,stroke:#c77d0a,color:#5c3a00
-    classDef api fill:#e8f0fc,stroke:#1f5fbf,color:#0e2f66
-    classDef sys fill:#eef2f7,stroke:#66717f,color:#1c2430
-    class X ai; class C1,C2,C3,C4 rule; class H,D,H2 human; class O,P,S,E api; class T1,T2,T3 sys
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/architecture-dark.svg">
+  <img src="docs/images/architecture-light.svg" alt="PlugPoint architecture. Forward path: a clinic note goes through exactly one AI step that extracts the action plan the clinician already made, then five deterministic rule checks. Routine plans go to a clinician for approval; blocked ones stop at a human decision — the system never guesses — and return once resolved. Only after approval do the mocked integrations act: orders, booking, patient message, EPR. Closing the loop: every item gets an expected-by date in the tracker, overdue items and at-risk appointments raise an alert to a named owner who chases, rebooks or resolves a hold, and the cycle repeats until results are reviewed and the loop closes. Every node carries the audit label it writes: AI, RULE, HUMAN, API or SYSTEM." width="100%">
+</picture>
 
 **Workflow, not agent.** There is exactly one LLM call, and it does the only thing an LLM is needed for — turning messy language into structured data. Everything after that is `if` statements, dates and state transitions, so the same input always gives the same behaviour and the behaviour can be tested.
 

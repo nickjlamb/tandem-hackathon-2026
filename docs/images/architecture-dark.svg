@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 640" font-family="-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" role="img" aria-label="PlugPoint architecture. Forward path: a clinic note goes through exactly one AI step that extracts the action plan the clinician already made, then five deterministic rule checks. Routine plans go to a clinician for approval; blocked ones stop at a human decision — the system never guesses — and return once resolved. Only after approval do the mocked integrations act: orders, booking, patient message, EPR. Closing the loop: every item gets an expected-by date in the tracker, overdue items and at-risk appointments raise an alert to a named owner who chases, rebooks or resolves a hold, and the cycle repeats until results are reviewed and the loop closes. Every node carries the audit label it writes: AI, RULE, HUMAN, API or SYSTEM.">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#767d86"/></marker><marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3fb950"/></marker><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f85149"/></marker><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d29922"/></marker></defs>
+<rect x="16" y="52" width="968" height="254" rx="12" fill="#151b23" stroke="#3d444d"/>
+<text x="34" y="78" font-size="11" fill="#9198a1" font-weight="600">THE FORWARD PATH &#183; NOTHING ACTS BEFORE APPROVAL</text>
+<rect x="40.0" y="104" width="168" height="68" rx="8" fill="#212830" stroke="#3d444d"/>
+<text x="124" y="123" font-size="9" fill="#9198a1" font-weight="700" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace">SYSTEM</text>
+<text x="124" y="143" font-size="12.5" fill="#e6edf3" font-weight="600" text-anchor="middle">Clinic note</text>
+<text x="124" y="160" font-size="10" fill="#9198a1" text-anchor="middle">Tandem &#183; dictation</text>
+<rect x="228.0" y="104" width="168" height="68" rx="8" fill="#2a2139" stroke="#5a3fa0"/>
+<text x="312" y="123" font-size="9" fill="#ab7df8" font-weight="700" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace">AI</text>
+<text x="312" y="143" font-size="12.5" fill="#e6edf3" font-weight="600" text-anchor="middle">Extract the plan</text>
+<text x="312" y="160" font-size="10" fill="#9198a1" text-anchor="middle">the one structured call</text>
+<rect x="416.0" y="104" width="168" height="68" rx="8" fill="#122117" stroke="#2b5233"/>
+<text x="500" y="123" font-size="9" fill="#3fb950" font-weight="700" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace">RULE</text>
+<text x="500" y="143" font-size="12.5" fill="#e6edf3" font-weight="600" text-anchor="middle">Five plan checks</text>
+<text x="500" y="160" font-size="10" fill="#9198a1" text-anchor="middle">indication &#183; interval &#183; dates</text>
+<rect x="604.0" y="104" width="168" height="68" rx="8" fill="#272115" stroke="#6b5a1f"/>
+<text x="688" y="123" font-size="9" fill="#d29922" font-weight="700" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace">HUMAN</text>
+<text x="688" y="143" font-size="12.5" fill="#e6edf3" font-weight="600" text-anchor="middle">Approve</text>
+<text x="688" y="160" font-size="10" fill="#9198a1" text-anchor="middle">editable &#183; one click</text>
+<rect x="792.0" y="104" width="168" height="68" rx="8" fill="#121d2f" stroke="#2b4a6f"/>
+<text x="876" y="123" font-size="9" fill="#4493f8" font-weight="700" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace">API</text>
+<text x="876" y="143" font-size="12.5" fill="#e6edf3" font-weight="600" text-anchor="middle">Act</text>
+<text x="876" y="160" font-size="10" fill="#9198a1" text-anchor="middle">orders &#183; booking &#183; SMS &#183; EPR</text>
+<polyline points="208,138 240,138" fill="none" stroke="#767d86" stroke-width="1.5" marker-end="url(#a)"/>
+<polyline points="396,138 428,138" fill="none" stroke="#767d86" stroke-width="1.5" marker-end="url(#a)"/>
+<polyline points="584,138 616,138" fill="none" stroke="#3fb950" stroke-width="1.5" marker-end="url(#ag)"/>
+<text x="600" y="128" font-size="9.5" fill="#3fb950" font-weight="600" text-anchor="middle">routine</text>
+<polyline points="772,138 804,138" fill="none" stroke="#d29922" stroke-width="1.5" marker-end="url(#ah)"/>
+<text x="788" y="128" font-size="9.5" fill="#d29922" font-weight="600" text-anchor="middle">approved</text>
+<polyline points="500,172 500,208" fill="none" stroke="#f85149" stroke-width="1.5" marker-end="url(#ar)"/>
+<text x="512" y="194" font-size="9.5" fill="#f85149" font-weight="600">blocked</text>
+<rect x="390.0" y="210" width="220" height="68" rx="8" fill="#272115" stroke="#6b5a1f"/>
+<text x="500" y="229" font-size="9" fill="#d29922" font-weight="700" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace">HUMAN</text>
+<text x="500" y="249" font-size="12.5" fill="#e6edf3" font-weight="600" text-anchor="middle">Decide</text>
+<text x="500" y="266" font-size="10" fill="#9198a1" text-anchor="middle">choose interval &#183; add indication</text>
+<polyline points="610,244 688,244 688,176" fill="none" stroke="#d29922" stroke-width="1.5" marker-end="url(#ah)"/>
+<text x="650" y="236" font-size="9.5" fill="#d29922" font-weight="600" text-anchor="middle">resolved</text>
+<text x="190" y="240" font-size="11" fill="#f85149" font-weight="600" text-anchor="middle">&#10005; an ambiguous plan stops here.</text>
+<text x="190" y="258" font-size="11" fill="#f85149" font-weight="600" text-anchor="middle">The system never guesses.</text>
+<rect x="16" y="334" width="968" height="246" rx="12" fill="#151b23" stroke="#3d444d"/>
+<text x="34" y="360" font-size="11" fill="#9198a1" font-weight="600">CLOSING THE LOOP &#183; UNTIL THE RESULTS ARE REVIEWED</text>
+<rect x="100.0" y="392" width="300" height="68" rx="8" fill="#212830" stroke="#3d444d"/>
+<text x="250" y="411" font-size="9" fill="#9198a1" font-weight="700" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace">SYSTEM</text>
+<text x="250" y="431" font-size="12.5" fill="#e6edf3" font-weight="600" text-anchor="middle">Tracker</text>
+<text x="250" y="448" font-size="10" fill="#9198a1" text-anchor="middle">expected-by dates &#183; overdue &#183; at risk &#183; on hold</text>
+<rect x="440.0" y="392" width="240" height="68" rx="8" fill="#272115" stroke="#6b5a1f"/>
+<text x="560" y="411" font-size="9" fill="#d29922" font-weight="700" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace">HUMAN</text>
+<text x="560" y="431" font-size="12.5" fill="#e6edf3" font-weight="600" text-anchor="middle">Alert to a named owner</text>
+<text x="560" y="448" font-size="10" fill="#9198a1" text-anchor="middle">chase &#183; rebook &#183; resolve hold</text>
+<rect x="760.0" y="392" width="200" height="68" rx="8" fill="#122117" stroke="#2b5233"/>
+<text x="860" y="411" font-size="9" fill="#3fb950" font-weight="700" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace">RULE</text>
+<text x="860" y="431" font-size="12.5" fill="#e6edf3" font-weight="600" text-anchor="middle">Loop closed</text>
+<text x="860" y="448" font-size="10" fill="#9198a1" text-anchor="middle">results reviewed</text>
+<polyline points="400,426 438,426" fill="none" stroke="#d29922" stroke-width="1.5" marker-end="url(#ah)"/>
+<polyline points="680,426 758,426" fill="none" stroke="#3fb950" stroke-width="1.5" marker-end="url(#ag)"/>
+<polyline points="560,460 560,502 250,502 250,462" fill="none" stroke="#767d86" stroke-width="1.5" marker-end="url(#a)"/>
+<text x="405" y="496" font-size="10" fill="#9198a1" text-anchor="middle">still open &#8212; chase again</text>
+<text x="500" y="546" font-size="11" fill="#9198a1" text-anchor="middle" font-style="italic">Every event is written to the audit trail with the label above it.</text>
+<polyline points="876,172 876,320 250,320 250,390" fill="none" stroke="#767d86" stroke-width="1.5" marker-end="url(#a)"/>
+<text x="560" y="314" font-size="10" fill="#9198a1" text-anchor="middle">every item gets an expected-by date</text>
+<text x="500" y="614" font-size="12.5" fill="#ab7df8" font-weight="700" text-anchor="middle">Exactly one AI step. Everything after it is rules, dates and state transitions &#8212; so the same note always behaves the same way.</text>
+</svg>

@@ -19,12 +19,14 @@ from .rules import (APPOINTMENT_LEAD_DAYS, CHECK_NAMES, RESULT_BUFFER_DAYS, chec
                     expected_result_date, next_weekday, resolve_reviewer)
 from .schema import ActionPlan, Clinician, GateResult
 
-START_DATE = date(2026, 9, 5)
+# The eval pins this so weekday arithmetic is reproducible; the app starts from the real date.
+EVAL_START_DATE = date(2026, 9, 5)
 
 
 class Store:
-    def __init__(self) -> None:
-        self.today: date = START_DATE
+    def __init__(self, start: date | None = None) -> None:
+        self._start = start
+        self.today: date = start or date.today()
         self.loops: dict[str, dict] = {}
         self.notifications: list[dict] = []
         self.audit = AuditLog()
@@ -34,7 +36,7 @@ class Store:
         self._note_ids = itertools.count(1)
 
     def reset(self) -> None:
-        self.__init__()
+        self.__init__(self._start)
 
     # ------------------------------------------------------------ plan stage
     def create_loop(self, patient_id: str, note: str, clinician: Clinician, plan: ActionPlan,

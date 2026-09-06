@@ -22,7 +22,7 @@ from pathlib import Path
 from plugpoint import extract as extract_mod
 from plugpoint.extract import extract_action_plan, llm_available
 from plugpoint.schema import ActionPlan, Clinician
-from plugpoint.tracker import Store
+from plugpoint.tracker import EVAL_START_DATE, Store
 
 CASES_PATH = Path(__file__).parent / "cases.json"
 RESULTS_PATH = Path(__file__).parent / "results.json"
@@ -45,7 +45,7 @@ def run_case(case: dict) -> dict:
     def check(name, expected, actual):
         checks.append({"name": name, "expected": expected, "actual": actual, "ok": expected == actual})
 
-    store = Store()
+    store = Store(start=EVAL_START_DATE)  # fixed date: expected alerts depend on weekday arithmetic
     clinician = Clinician(**inp["clinician"])
     fallback = ActionPlan.model_validate(inp["mock_plan"]) if inp.get("mock_plan") else None
     try:

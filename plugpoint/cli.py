@@ -7,7 +7,6 @@
 from __future__ import annotations
 
 import sys
-from datetime import date, timedelta
 
 from .extract import extract_action_plan
 from .fixtures import SAMPLE_NOTES

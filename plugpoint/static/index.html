@@ -154,6 +154,36 @@
   .actor{display:inline-block;min-width:70px;text-align:center;font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:2px 8px;border-radius:6px}
   .actor.AI{background:var(--ai-soft);color:var(--ai)}.actor.RULE{background:var(--rule-soft);color:var(--rule)}.actor.HUMAN{background:var(--human-soft);color:var(--human)}.actor.API{background:var(--api-soft);color:var(--api)}.actor.SYSTEM{background:var(--sys-soft);color:var(--sys)}
   .empty{color:var(--muted);font-style:italic;padding:12px 0}
+
+  /* about drawer */
+  .iconbtn{width:34px;height:34px;border-radius:50%;padding:0;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);border:1px solid var(--line);background:#fff}
+  .iconbtn:hover,.iconbtn:focus-visible{color:var(--accent);border-color:var(--accent);background:var(--accent-soft);outline:none}
+  .iconbtn svg{width:18px;height:18px}
+  .backdrop{position:fixed;inset:0;background:rgba(15,23,42,.35);z-index:40;opacity:0;transition:opacity .18s}
+  .backdrop[data-open]{opacity:1}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100vw);background:var(--card);border-left:1px solid var(--line);box-shadow:-12px 0 40px -20px rgba(15,23,42,.35);z-index:50;transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column}
+  .drawer[data-open]{transform:none}
+  .drawer-h{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+  .drawer-h h2{margin:0;font-size:17px;letter-spacing:-.2px}
+  .drawer-b{padding:18px 20px 28px;overflow:auto;font-size:13.5px}
+  .drawer-b h3{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:22px 0 10px}
+  .drawer-b p{margin:0 0 10px}
+  .steps{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+  .steps li{display:flex;gap:12px;align-items:flex-start}
+  .steps .num{width:26px;height:26px;font-size:12px}
+  .steps b{display:block}
+  .steps span{color:var(--muted)}
+  .faq{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .faq details{border-top:1px solid var(--line)}
+  .faq details:first-child{border-top:0}
+  .faq summary{cursor:pointer;padding:10px 12px;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:10px}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary:after{content:"+";color:var(--muted);font-weight:500}
+  .faq details[open] summary:after{content:"–"}
+  .faq summary:focus-visible{outline:2px solid var(--accent-soft);border-radius:8px}
+  .faq .a{padding:0 12px 12px;color:var(--muted)}
+  .demo-note{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--muted);display:flex;gap:10px;align-items:flex-start}
+  @media (prefers-reduced-motion:reduce){.drawer,.backdrop{transition:none}}
 </style>
 </head>
 <body>
@@ -173,7 +203,32 @@
   </div>
   <a href="/eval" class="goldlink">Gold eval →</a>
   <span class="who" id="who" title="Acting as the selected note author">—</span>
+  <button class="iconbtn" id="aboutBtn" aria-label="About PlugPoint" aria-haspopup="dialog" aria-controls="about" onclick="openAbout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M9.6 9.3a2.4 2.4 0 1 1 3.4 2.2c-.7.35-1 .85-1 1.6"/><circle cx="12" cy="16.6" r=".6" fill="currentColor"/></svg></button>
 </header>
+
+<div class="backdrop" id="backdrop" hidden onclick="closeAbout()"></div>
+<aside class="drawer" id="about" role="dialog" aria-modal="true" aria-labelledby="aboutTitle" hidden>
+  <div class="drawer-h"><span class="num">?</span><h2 id="aboutTitle">About PlugPoint</h2><div class="spacer"></div><button class="iconbtn" aria-label="Close" onclick="closeAbout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="drawer-b">
+    <p>PlugPoint turns the documented plan from a clinic consultation into tracked actions, helping ensure investigations, results and follow-up don’t fall through the gaps.</p>
+    <h3>How it works</h3>
+    <ol class="steps">
+      <li><span class="num">1</span><div><b>Extract</b><span>AI identifies investigations and follow-up from the clinic note.</span></div></li>
+      <li><span class="num">2</span><div><b>Check</b><span>Deterministic rules verify that the plan is complete and internally consistent.</span></div></li>
+      <li><span class="num">3</span><div><b>Approve</b><span>A clinician reviews and approves the plan before anything is actioned.</span></div></li>
+      <li><span class="num">4</span><div><b>Track</b><span>PlugPoint monitors outstanding results and follow-up until the loop is closed.</span></div></li>
+    </ol>
+    <h3>FAQs</h3>
+    <div class="faq">
+      <details><summary>Does PlugPoint make clinical decisions?</summary><div class="a">No. Clinical decisions remain with the clinician. PlugPoint extracts, checks, executes and tracks the documented plan.</div></details>
+      <details><summary>Does it automatically order tests?</summary><div class="a">Only after clinician approval. In this demo, downstream EPR, ordering, booking and messaging systems are simulated.</div></details>
+      <details><summary>What happens if a result doesn’t arrive?</summary><div class="a">The tracker identifies overdue actions and can escalate them rather than allowing the follow-up loop to disappear.</div></details>
+      <details><summary>Is the AI trusted to get everything right?</summary><div class="a">No. AI handles language extraction. Deterministic checks and clinician approval provide separate safeguards before actions are executed.</div></details>
+    </div>
+    <h3>Demo mode</h3>
+    <div class="demo-note"><span class="chip" style="margin:0;flex:none">synthetic data</span><span>This prototype uses synthetic patient data and mocked downstream clinical systems. Built for the NXGN × Tandem Health Hackathon 2026.</span></div>
+  </div>
+</aside>
 
 <main>
   <!-- ------------------------------------------------------------- 1 -->
@@ -471,6 +526,37 @@ function downloadLog() {
   const csv = ['date,recorded_at,source,loop,message', ...rows.map(e => [e.date, e.recorded_at || '', ACTOR_LABEL[e.actor], e.loop_id || '', '"' + e.message.replace(/"/g, '""') + '"'].join(','))].join('\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv'})); a.download = `plugpoint-audit-${STATE.today}.csv`; a.click();
 }
+
+/* ----------------------------------------------------------- about */
+let aboutReturnFocus = null;
+function openAbout() {
+  const d = $('about'), bd = $('backdrop');
+  aboutReturnFocus = document.activeElement;
+  d.hidden = false; bd.hidden = false;
+  requestAnimationFrame(() => { d.setAttribute('data-open', ''); bd.setAttribute('data-open', ''); });
+  $('aboutBtn').setAttribute('aria-expanded', 'true');
+  d.querySelector('button[aria-label="Close"]').focus();
+}
+function closeAbout() {
+  const d = $('about'), bd = $('backdrop');
+  if (d.hidden) return;
+  d.removeAttribute('data-open'); bd.removeAttribute('data-open');
+  $('aboutBtn').setAttribute('aria-expanded', 'false');
+  setTimeout(() => { d.hidden = true; bd.hidden = true; }, 220);
+  if (aboutReturnFocus && aboutReturnFocus.focus) aboutReturnFocus.focus();
+}
+document.addEventListener('keydown', e => {
+  const d = $('about');
+  if (d.hidden) return;
+  if (e.key === 'Escape') { e.preventDefault(); closeAbout(); return; }
+  if (e.key === 'Tab') {  // keep focus inside the dialog while it is open
+    const f = [...d.querySelectorAll('button, summary, a[href], [tabindex]:not([tabindex="-1"])')].filter(el => !el.hidden);
+    if (!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+});
 
 init();
 </script>

@@ -4,7 +4,7 @@ SYSTEM (tracker/clock)."""
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime, timezone
 from typing import Literal, Optional
 
 Actor = Literal["AI", "RULE", "HUMAN", "API", "SYSTEM"]
@@ -21,6 +21,7 @@ class AuditLog:
         entry = {
             "seq": self._seq,
             "date": today.isoformat(),
+            "recorded_at": datetime.now(timezone.utc).strftime("%H:%M:%S UTC"),
             "actor": actor,
             "message": message,
             "loop_id": loop_id,

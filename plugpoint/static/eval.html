@@ -4,19 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PlugPoint · gold evaluation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#f4f6f9;--card:#fff;--ink:#1c2430;--muted:#66717f;--line:#e2e7ee;--ok:#1f8a5b;--bad:#c0392b;--warn:#c77d0a;--api:#1f5fbf;--ai:#6b4fbb}
+  :root{--bg:#f3f5f9;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e5e9f0;--ok:#059669;--bad:#dc2626;--warn:#d97706;--api:#2563eb;--ai:#7c3aed}
   *{box-sizing:border-box}
-  body{margin:0;font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;color:var(--ink);background:var(--bg)}
-  header{display:flex;align-items:center;gap:16px;padding:12px 20px;background:#fff;border-bottom:1px solid var(--line)}
-  header h1{font-size:18px;margin:0}header h1 span{color:var(--muted);font-weight:400;font-size:13px;margin-left:8px}
+  body{margin:0;font:14px/1.5 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+  header{display:flex;align-items:center;gap:16px;padding:12px 24px;background:#fff;border-bottom:1px solid var(--line)}
+  header h1{font-size:19px;margin:0;letter-spacing:-.3px}header h1 span{color:var(--muted);font-weight:400;font-size:13px;margin-left:8px}
   .spacer{flex:1}
   a{color:var(--api)}
-  button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--ink)}
+  button{font:inherit;padding:8px 14px;border-radius:9px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--ink);font-weight:500}
   button.primary{background:var(--api);border-color:var(--api);color:#fff;font-weight:600}
   button:disabled{opacity:.5;cursor:wait}
   main{padding:16px 20px;max-width:1300px;margin:0 auto}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:16px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 6px 20px -10px rgba(15,23,42,.10)}
   .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
   .tile{background:#fbfcfd;border:1px solid var(--line);border-radius:9px;padding:12px 14px}
   .tile b{display:block;font-size:30px;line-height:1.1;letter-spacing:-.5px}

@@ -3,161 +3,241 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PlugPoint · close the loop after clinic</title>
+<title>PlugPoint · closes the loop after clinic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#f4f6f9;--card:#fff;--ink:#1c2430;--muted:#66717f;--line:#e2e7ee;
-    --ai:#6b4fbb;--rule:#1f8a5b;--human:#c77d0a;--api:#1f5fbf;--sys:#66717f;
-    --ok:#1f8a5b;--warn:#c77d0a;--bad:#c0392b;--accent:#1f5fbf;
+    --bg:#f3f5f9;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e5e9f0;--soft:#f8fafc;
+    --accent:#2563eb;--accent-soft:#e8effd;
+    --ai:#7c3aed;--ai-soft:#f1eafe;--rule:#059669;--rule-soft:#e6f7f0;--human:#d97706;--human-soft:#fff4e0;
+    --api:#2563eb;--api-soft:#e8effd;--sys:#64748b;--sys-soft:#eef2f7;
+    --ok:#059669;--warn:#d97706;--bad:#dc2626;--bad-soft:#fdecec;
+    --r:14px;--shadow:0 1px 2px rgba(15,23,42,.04),0 6px 20px -10px rgba(15,23,42,.10);
   }
   *{box-sizing:border-box}
-  body{margin:0;font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;color:var(--ink);background:var(--bg)}
-  header{display:flex;align-items:center;gap:16px;padding:12px 20px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
-  header h1{font-size:18px;margin:0;letter-spacing:-.2px}
-  header h1 span{color:var(--muted);font-weight:400;font-size:13px;margin-left:8px}
+  body{margin:0;font:14px/1.5 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+  button,select,input,textarea{font:inherit;color:inherit}
+  button{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 12px;font-weight:500;transition:background .12s,border-color .12s}
+  button:hover{background:var(--soft)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;padding:10px 16px}
+  button.primary:hover{background:#1d4ed8}
+  button.primary:disabled{opacity:.5;cursor:not-allowed}
+  button.small{padding:5px 10px;font-size:12px;border-radius:8px}
+  button.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+  button.ghost:hover{background:var(--soft);color:var(--ink)}
+  select,textarea,input[type=date],input[type=text],input[type=search]{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff}
+  select:focus,textarea:focus,input:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+  textarea{min-height:200px;resize:vertical;line-height:1.55}
+
+  /* header */
+  header{display:flex;align-items:center;gap:14px;padding:12px 24px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+  .logo{display:flex;align-items:center;gap:10px}
+  .logo svg{width:28px;height:28px}
+  .logo b{font-size:19px;letter-spacing:-.3px}
+  .logo span{color:var(--muted);font-size:13px;margin-left:4px}
   .spacer{flex:1}
-  .badge{font-size:12px;padding:3px 9px;border-radius:999px;background:#eef2f7;color:var(--muted);border:1px solid var(--line)}
-  .badge.date{background:#fff7e6;color:#8a5a00;border-color:#f3dfb3;font-weight:600}
-  main{display:grid;grid-template-columns:minmax(300px,1fr) minmax(360px,1.3fr) minmax(320px,1.1fr);gap:16px;padding:16px 20px}
-  section.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
-  section.card h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 10px}
-  label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
-  select,textarea,input[type=date]{width:100%;font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink)}
-  textarea{min-height:230px;resize:vertical;line-height:1.5}
-  button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--ink)}
-  button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
-  button.primary:disabled{opacity:.45;cursor:not-allowed}
-  button.small{padding:4px 9px;font-size:12px}
-  button.ghost{background:transparent}
-  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .mt{margin-top:12px}
-  .muted{color:var(--muted)}
-  .pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;border:1px solid transparent;white-space:nowrap}
-  .pill.proposed{background:#eef2f7;color:var(--muted)}
-  .pill.result_awaited{background:#e8f0fc;color:var(--api);border-color:#c9dbf7}
-  .pill.result_received{background:#e6f5ee;color:var(--ok);border-color:#bfe5d2}
-  .pill.reviewed,.pill.closed{background:#e6f5ee;color:var(--ok)}
-  .pill.declined{background:#f3f3f3;color:var(--muted);text-decoration:line-through}
-  .pill.open{background:#e8f0fc;color:var(--api);border-color:#c9dbf7}
-  .pill.awaiting_approval{background:#fff3e0;color:var(--human);border-color:#f5d9a8}
-  .pill.needs_review{background:#fdecea;color:var(--bad);border-color:#f5c2bd}
-  .pill.overdue{background:#fdecea;color:var(--bad);border-color:#f5c2bd}
-  .pill.at_risk{background:#fff3e0;color:var(--human);border-color:#f5d9a8}
-  .pill.on_hold{background:#f3e8ff;color:var(--ai);border-color:#d9c7f5}
-  .alert.investigation_on_hold{border-left-color:var(--ai);background:#faf6ff}
-  .pill.booked{background:#e6f5ee;color:var(--ok);border-color:#bfe5d2}
-  .chip{display:inline-block;font-size:11px;padding:1px 7px;border-radius:5px;background:#eef2f7;color:var(--muted)}
-  .actor{display:inline-block;min-width:58px;text-align:center;font-size:11px;font-weight:700;padding:1px 6px;border-radius:5px;color:#fff}
-  .actor.AI{background:var(--ai)}.actor.RULE{background:var(--rule)}.actor.HUMAN{background:var(--human)}.actor.API{background:var(--api)}.actor.SYSTEM{background:var(--sys)}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:left;padding:6px 6px;border-bottom:1px solid var(--line)}
-  td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
-  .checks li{list-style:none;padding:4px 0;display:flex;gap:8px;align-items:flex-start}
-  .checks{padding:0;margin:0 0 6px}
-  .ic{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex:none;margin-top:1px}
-  .ic.ok{background:var(--ok)}.ic.block{background:var(--bad)}.ic.warn{background:var(--warn)}.ic.info{background:var(--sys)}
-  .loop{border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-bottom:10px;background:#fbfcfd}
-  .loop.active{border-color:var(--accent);box-shadow:0 0 0 2px #dbe7fb}
-  .loop h3{margin:0;font-size:14px}
-  .item{display:flex;gap:8px;align-items:center;padding:5px 0;border-top:1px dashed var(--line);font-size:13px;flex-wrap:wrap}
-  .item .name{flex:1;min-width:120px}
-  .alert{border-left:4px solid var(--bad);background:#fff8f7;padding:8px 10px;border-radius:6px;margin-bottom:8px}
-  .alert.appointment_at_risk{border-left-color:var(--warn);background:#fffaf0}
-  .alert.appointment_passed{border-left-color:var(--api);background:#f3f7fd}
-  .alert b{display:block;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
-  .audit{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;max-height:280px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px;background:#fff}
-  .audit div{display:flex;gap:10px;padding:2px 0;border-bottom:1px solid #f1f4f8}
-  .audit .d{color:var(--muted);flex:none;width:80px}
-  .audit .lid{color:var(--muted);flex:none;width:36px}
-  .audit .actor{align-self:flex-start;flex:none}
-  .empty{color:var(--muted);font-style:italic;padding:10px 0}
-  .pack{background:#f3f7fd;border:1px solid #c9dbf7;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:13px}
+  .today{display:inline-flex;align-items:center;gap:8px;background:#fff7e6;color:#8a5a00;border:1px solid #f4dfb0;font-weight:600;font-size:13px;padding:6px 12px;border-radius:999px}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+  .seg button{border:0;border-radius:0;border-left:1px solid var(--line);padding:7px 12px;font-size:13px}
+  .seg button:first-child{border-left:0}
+  .hint{font-size:12px;color:var(--muted)}
+  .who{width:34px;height:34px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:12px}
+  .goldlink{display:inline-flex;align-items:center;gap:6px;background:#fff7e6;border:1px solid #f4dfb0;color:#8a5a00;border-radius:999px;padding:6px 12px;font-weight:600;font-size:13px;text-decoration:none}
+  .mode{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:#fff}
+
+  /* layout */
+  main{display:grid;grid-template-columns:minmax(300px,.95fr) minmax(420px,1.45fr) minmax(320px,1fr);gap:18px;padding:18px 24px 0}
+  @media (max-width:1180px){main{grid-template-columns:1fr 1fr}}
+  @media (max-width:820px){main{grid-template-columns:1fr}}
+  footer{padding:18px 24px 28px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:18px 20px}
+  .card-h{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .num{width:30px;height:30px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:none}
+  .card-h h2{margin:0;font-size:17px;letter-spacing:-.2px}
+  .card-h h2 span{font-weight:400;color:var(--muted);font-size:14px;margin-left:6px}
+  .card-h small{display:block;color:var(--muted);font-size:12px;margin-top:1px}
+  .status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;border:1px solid transparent;white-space:nowrap}
+  .status.ok{background:var(--rule-soft);color:var(--ok);border-color:#bfe8d6}
+  .status.warn{background:var(--human-soft);color:var(--human);border-color:#f6dfb0}
+  .status.bad{background:var(--bad-soft);color:var(--bad);border-color:#f7c5c5}
+  .status.info{background:var(--api-soft);color:var(--api);border-color:#c9d9f8}
+  .status.neutral{background:var(--sys-soft);color:var(--muted)}
+  .dot{width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block}
+  label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin:12px 0 5px}
+  .kv{display:grid;grid-template-columns:repeat(4,auto);gap:4px 18px;font-size:13px;margin-top:12px}
+  .kv span{color:var(--muted);font-size:11px;display:block}
+  .kv b{font-weight:600}
+  .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .mt{margin-top:12px}.muted{color:var(--muted)}
+  .chip{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;background:var(--sys-soft);color:var(--muted);margin-right:4px}
+  .chip.amend{background:var(--human-soft);color:var(--human)}
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap;border:1px solid transparent}
+  .pill.result_awaited,.pill.booked_fu{background:var(--api-soft);color:var(--api);border-color:#c9d9f8}
+  .pill.result_received,.pill.booked,.pill.reviewed,.pill.closed{background:var(--rule-soft);color:var(--ok);border-color:#bfe8d6}
+  .pill.proposed{background:var(--sys-soft);color:var(--muted)}
+  .pill.declined{background:var(--sys-soft);color:var(--muted);text-decoration:line-through}
+  .pill.overdue,.pill.needs_review{background:var(--bad-soft);color:var(--bad);border-color:#f7c5c5}
+  .pill.at_risk,.pill.awaiting_approval{background:var(--human-soft);color:var(--human);border-color:#f6dfb0}
+  .pill.on_hold{background:var(--ai-soft);color:var(--ai);border-color:#dccbfb}
+  .pill.open{background:var(--api-soft);color:var(--api);border-color:#c9d9f8}
   .err{color:var(--bad);font-size:13px;margin-top:8px}
-  .legend{font-size:11px;color:var(--muted)}
-  footer{padding:0 20px 24px}
-  .decision{background:#fff8f7;border:1px solid #f5c2bd;border-radius:8px;padding:10px 12px;margin-top:10px}
+
+  /* plan table */
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 8px;border-bottom:1px solid var(--line)}
+  td{padding:12px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  td.name b{display:block;font-weight:600;margin-bottom:5px}
+  td.ind .q{display:block;color:var(--muted);font-size:11.5px;margin-top:4px;font-style:italic}
+  input.edit,textarea.edit{width:100%;font-size:13px;padding:6px 8px;border:1px dashed #c8d0dc;border-radius:8px;background:#fffdf7}
+  input.edit:focus,textarea.edit:focus{border-style:solid;border-color:var(--human);outline:2px solid var(--human-soft);background:#fff}
+  textarea.edit{min-height:44px;resize:vertical;line-height:1.4}
+  .addrow td{background:var(--soft)}
+  .checks{list-style:none;padding:0;margin:0 0 12px;display:flex;flex-direction:column;gap:6px}
+  .checks li{display:flex;gap:8px;align-items:flex-start;font-size:13px}
+  .ic{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex:none;margin-top:2px}
+  .ic.ok{background:var(--ok)}.ic.block{background:var(--bad)}.ic.warn{background:var(--warn)}.ic.info{background:var(--sys)}
+  .decision{background:var(--bad-soft);border:1px solid #f7c5c5;border-radius:12px;padding:12px 14px;margin-top:14px}
   .decision h4{margin:0 0 6px;font-size:13px;color:var(--bad)}
-  .kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:13px}
-  .kv span:first-child{color:var(--muted)}
-  input.edit,textarea.edit{width:100%;font:inherit;font-size:13px;padding:4px 6px;border:1px dashed #c5cdd8;border-radius:5px;background:#fffdf7;color:var(--ink)}
-  input.edit:focus,textarea.edit:focus{border-style:solid;border-color:var(--human);outline:none;background:#fff}
-  textarea.edit{resize:vertical;min-height:38px;line-height:1.35}
-  .addrow td{background:#fafbfc}
+  .approved{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:14px}
+  .approved .top{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .avatar{width:44px;height:44px;border-radius:50%;background:var(--human-soft);color:var(--human);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none}
+  .booked{margin-left:auto;background:var(--rule-soft);border:1px solid #bfe8d6;border-radius:10px;padding:8px 12px;font-size:13px}
+  .booked b{display:block;color:var(--ok)}
+  .booked.risk{background:var(--human-soft);border-color:#f6dfb0}.booked.risk b{color:var(--human)}
+  .counts{display:flex;gap:22px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);flex-wrap:wrap}
+  .counts b{font-size:18px;color:var(--ink);margin-right:5px}
+  .pack{background:var(--api-soft);border:1px solid #c9d9f8;border-radius:12px;padding:12px 14px;margin-top:12px;font-size:13px}
+  .fu-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 8px;border-top:1px solid var(--line)}
+
+  /* tracker */
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:8px 0 16px}
+  .tile{border:1px solid var(--line);border-radius:12px;padding:12px 10px;text-align:center;background:#fff}
+  .tile b{display:block;font-size:22px;line-height:1.1;margin:6px 0 2px}
+  .tile span{font-size:11px;color:var(--muted)}
+  .tile svg{width:18px;height:18px}
+  .alert{border:1px solid #f7c5c5;border-left:4px solid var(--bad);background:#fff8f8;padding:10px 12px;border-radius:10px;margin-bottom:10px}
+  .alert.appointment_at_risk{border-color:#f6dfb0;border-left-color:var(--warn);background:#fffaf0}
+  .alert.investigation_on_hold{border-color:#dccbfb;border-left-color:var(--ai);background:#faf7ff}
+  .alert.appointment_passed{border-color:#c9d9f8;border-left-color:var(--api);background:#f5f8fe}
+  .alert .k{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+  .alert .m{margin:3px 0 8px}
+  .tl-h{display:flex;align-items:center;justify-content:space-between;margin:6px 0 10px}
+  .tl-h h3{margin:0;font-size:14px}
+  .loop{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:12px;background:#fff}
+  .loop.active{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .loop-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .loop-h h3{margin:0;font-size:14px}
+  .tl{position:relative;padding-left:22px}
+  .tl:before{content:"";position:absolute;left:7px;top:10px;bottom:10px;width:2px;background:var(--line)}
+  .ev{position:relative;border:1px solid var(--line);border-radius:10px;padding:9px 10px;margin:8px 0;background:#fff}
+  .ev:before{content:"";position:absolute;left:-19px;top:14px;width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px #fff}
+  .ev.done:before{background:var(--ok)}.ev.bad:before{background:var(--bad)}.ev.hold:before{background:var(--ai)}
+  .ev .t{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+  .ev .t b{font-size:13px}
+  .ev .t span{font-size:11px;color:var(--muted);white-space:nowrap}
+  .ev .s{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:5px;font-size:12px;color:var(--muted)}
+  .demo{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-left:auto}
+
+  /* audit */
+  .audit-h{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+  .audit-h h2{margin:0;font-size:17px;letter-spacing:-.2px;display:flex;align-items:center;gap:10px}
+  .tabs{display:inline-flex;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:3px}
+  .tabs button{border:0;background:transparent;padding:5px 11px;font-size:12px;border-radius:7px;color:var(--muted)}
+  .tabs button.on{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+  .audit-h input[type=search]{width:240px;padding:7px 10px}
+  .audit-wrap{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:12px}
+  .audit td,.audit th{padding:8px 10px}
+  .audit td.d{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);white-space:nowrap}
+  .actor{display:inline-block;min-width:70px;text-align:center;font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:2px 8px;border-radius:6px}
+  .actor.AI{background:var(--ai-soft);color:var(--ai)}.actor.RULE{background:var(--rule-soft);color:var(--rule)}.actor.HUMAN{background:var(--human-soft);color:var(--human)}.actor.API{background:var(--api-soft);color:var(--api)}.actor.SYSTEM{background:var(--sys-soft);color:var(--sys)}
+  .empty{color:var(--muted);font-style:italic;padding:12px 0}
 </style>
 </head>
 <body>
 <header>
-  <h1>PlugPoint <span>closes the loop after clinic</span></h1>
-  <span class="badge date" id="today">—</span>
-  <span class="badge" id="llmmode">—</span>
+  <div class="logo">
+    <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#e8effd"/><path d="M9 17c3-6 8-6 11-1l3 4" stroke="#2563eb" stroke-width="2.6" stroke-linecap="round"/><circle cx="23" cy="20" r="2.6" fill="#2563eb"/><circle cx="9" cy="17" r="2.6" fill="#2563eb"/></svg>
+    <b>PlugPoint</b><span>closes the loop after clinic</span>
+  </div>
+  <span class="today" id="today">—</span>
+  <span class="mode" id="llmmode">—</span>
   <div class="spacer"></div>
-  <span class="legend">Simulated time:</span>
-  <button class="small" onclick="advance(7)">+1 week</button>
-  <button class="small" onclick="advance(14)">+2 weeks</button>
-  <button class="small" onclick="advance(28)">+4 weeks</button>
-  <button class="small ghost" onclick="resetAll()">Reset demo</button>
-  <a href="/eval" class="badge" style="text-decoration:none;color:var(--ink);font-weight:600">Gold eval →</a>
+  <span class="hint">Simulate time</span>
+  <div class="seg">
+    <button onclick="advance(7)">+1 week</button><button onclick="advance(14)">+2 weeks</button><button onclick="advance(28)">+4 weeks</button><button onclick="resetAll()">Reset demo</button>
+  </div>
+  <a href="/eval" class="goldlink">Gold eval →</a>
+  <span class="who" id="who" title="Acting as the selected note author">—</span>
 </header>
 
 <main>
-  <!-- ---------------------------------------------------------- column 1 -->
+  <!-- ------------------------------------------------------------- 1 -->
   <section class="card">
-    <h2>1 · Clinic note <span class="chip">from Tandem</span></h2>
-    <label>Sample note</label>
+    <div class="card-h"><span class="num">1</span><div><h2>Clinic note</h2><small>From Tandem</small></div><div class="spacer"></div><span class="status ok" id="noteStatus"><span class="dot"></span>Ready</span></div>
+    <label style="margin-top:0">Sample note</label>
     <select id="sample" onchange="loadSample(true)"></select>
-    <div class="kv mt" id="patientBox"></div>
+    <div class="kv" id="patientBox"></div>
     <label>Note author</label>
-    <select id="clinician"></select>
+    <select id="clinician" onchange="renderWho()"></select>
     <label>Consultation note / dictated plan</label>
     <textarea id="note"></textarea>
     <div class="row mt">
-      <button class="primary" id="extractBtn" onclick="extract()">Extract action plan</button>
-      <span class="muted" id="extractHint"></span>
+      <button class="primary" id="extractBtn" onclick="extract()" style="flex:1">Extract action plan</button>
     </div>
+    <div class="hint" style="text-align:center;margin-top:8px" id="extractHint"></div>
     <div class="err" id="extractErr"></div>
   </section>
 
-  <!-- ---------------------------------------------------------- column 2 -->
+  <!-- ------------------------------------------------------------- 2 -->
   <section class="card">
-    <h2>2 · Action plan · <span style="color:var(--human)">clinician approval</span></h2>
-    <div id="plan"><div class="empty">Extract a plan from a note to begin.</div></div>
+    <div class="card-h"><span class="num">2</span><div><h2>Action plan<span>Clinician approval</span></h2><small id="planSub">Extract a plan from a note to begin</small></div><div class="spacer"></div><span id="planStatus"></span></div>
+    <div id="plan"><div class="empty">No plan yet.</div></div>
   </section>
 
-  <!-- ---------------------------------------------------------- column 3 -->
+  <!-- ------------------------------------------------------------- 3 -->
   <section class="card">
-    <h2>3 · Tracker <span class="chip">nothing falls through</span></h2>
+    <div class="card-h"><span class="num">3</span><div><h2>Tracker</h2><small>Nothing falls through</small></div></div>
+    <div id="tiles"></div>
     <div id="alerts"></div>
+    <div class="tl-h"><h3>Patient timeline</h3><span class="hint" id="loopCount"></span></div>
     <div id="loops"><div class="empty">No open loops yet.</div></div>
   </section>
 </main>
 
 <footer>
   <section class="card">
-    <h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button class="small ghost" id="auditToggle" onclick="toggleAudit()" style="text-transform:none;letter-spacing:0">▾ Hide</button> Audit trail
-      <span class="legend" style="margin-left:10px">
-        <span class="actor AI">AI</span> language extraction &nbsp;
-        <span class="actor RULE">RULE</span> deterministic code &nbsp;
-        <span class="actor HUMAN">HUMAN</span> clinician &nbsp;
-        <span class="actor API">API</span> downstream system (mocked) &nbsp;
-        <span class="actor SYSTEM">SYSTEM</span> tracker
-      </span>
-    </h2>
+    <div class="audit-h">
+      <h2><button class="small ghost" id="auditToggle" onclick="toggleAudit()">▸ Show</button> Audit trail</h2>
+      <div class="tabs" id="auditTabs">
+        <button class="on" data-f="">All events</button><button data-f="AI">AI extraction</button><button data-f="RULE">Rule checks</button><button data-f="HUMAN">Clinician</button><button data-f="API">API</button><button data-f="SYSTEM">System</button>
+      </div>
+      <label style="display:inline-flex;gap:6px;align-items:center;margin:0;font-size:12px"><input type="checkbox" id="auditMine" onchange="renderAudit()" style="width:auto"> Selected patient only</label>
+      <div class="spacer"></div>
+      <input type="search" id="auditSearch" placeholder="Search events…" oninput="renderAudit()">
+      <button class="small" onclick="downloadLog()">Download log</button>
+    </div>
     <div id="auditBody">
-    <label style="display:inline-flex;gap:6px;align-items:center;margin:0 0 6px;font-size:12px"><input type="checkbox" id="auditMine" onchange="renderAudit()" style="width:auto"> Show only the selected patient's loop</label>
-    <div class="audit" id="audit"></div>
+      <div class="audit-wrap"><table class="audit"><thead><tr><th>Date (simulated)</th><th>Source</th><th>Event</th><th>Loop</th></tr></thead><tbody id="audit"></tbody></table></div>
     </div>
   </section>
 </footer>
 
 <script>
-let META = null, STATE = null, ACTIVE_LOOP = null;
+let META = null, STATE = null, ACTIVE_LOOP = null, AUDIT_FILTER = '';
+let ADDED = [];  // investigations the clinician adds before approval
+let EDITS = {};  // clinician amendments keyed by item id
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt = iso => iso ? new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}) : '—';
-const pill = (s, extra='') => `<span class="pill ${s} ${extra}">${s.replace(/_/g,' ')}</span>`;
+const nice = s => String(s).replace(/_/g, ' ');
+const pill = (s, label) => `<span class="pill ${s}">${label ?? nice(s)}</span>`;
+const initials = name => name.replace(/^(Dr|Mr|Mrs|Ms|Miss|Prof)\s+/, '').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+const ACTOR_LABEL = {AI: 'AI', RULE: 'RULE', HUMAN: 'CLINICIAN', API: 'API', SYSTEM: 'SYSTEM'};
 
-async function api(path, body, method='POST') {
-  const r = await fetch(path, {method, headers: {'Content-Type':'application/json'}, body: body ? JSON.stringify(body) : undefined});
+async function api(path, body, method = 'POST') {
+  const r = await fetch(path, {method, headers: {'Content-Type': 'application/json'}, body: body ? JSON.stringify(body) : undefined});
   const j = await r.json();
   if (!r.ok) throw new Error(j.detail || r.statusText);
   return j;
@@ -168,9 +248,10 @@ async function init() {
   $('llmmode').textContent = 'extraction: ' + META.llm;
   $('sample').innerHTML = META.samples.map(s => `<option value="${s.id}">${esc(s.label)}</option>`).join('');
   $('clinician').innerHTML = META.clinicians.map(c => `<option value="${esc(c.name)}|${c.role}">${esc(c.name)} · ${c.role}</option>`).join('');
+  document.querySelectorAll('#auditTabs button').forEach(b => b.onclick = () => { AUDIT_FILTER = b.dataset.f; document.querySelectorAll('#auditTabs button').forEach(x => x.classList.toggle('on', x === b)); renderAudit(); });
   loadSample();
   STATE = await api('/api/state', null, 'GET');
-  let hidden = true;  // hidden by default; a viewer's explicit choice is remembered
+  let hidden = true;  // audit hidden by default; a viewer's explicit choice is remembered
   try { hidden = localStorage.getItem('pp.auditHidden') !== '0'; } catch (e) {}
   if (hidden) toggleAudit();
   render();
@@ -178,239 +259,214 @@ async function init() {
 
 async function loadSample(userChanged = false) {
   const s = META.samples.find(x => x.id === $('sample').value);
-  if (userChanged) {  // a new sample starts a clean demo: clear plan, tracker, alerts and audit
-    STATE = await api('/api/reset', {}); ACTIVE_LOOP = null; ADDED = []; EDITS = {};
-  }
+  if (userChanged) { STATE = await api('/api/reset', {}); ACTIVE_LOOP = null; ADDED = []; EDITS = {}; }
   $('note').value = s.note;
   $('clinician').value = `${s.clinician.name}|${s.clinician.role}`;
   const p = META.patients.find(p => p.id === s.patient_id);
-  $('patientBox').innerHTML = `<span>Patient</span><b>${esc(p.name)}</b><span>Details</span><span>${p.age}${p.sex} · ${p.hospital_no} · ${p.clinic} clinic</span>`;
+  $('patientBox').innerHTML = `<div><span>Patient</span><b>${esc(p.name)}</b></div><div><span>Age / Sex</span><b>${p.age}${p.sex}</b></div><div><span>Hospital no.</span><b>${p.hospital_no}</b></div><div><span>Clinic</span><b>${p.clinic}</b></div>`;
   $('patientBox').dataset.pid = p.id;
   $('extractErr').textContent = '';
-  $('extractHint').textContent = META.llm === 'claude' ? 'Claude, schema-constrained' : 'offline fixture (set ANTHROPIC_API_KEY for free text)';
+  $('extractHint').textContent = META.llm === 'claude' ? 'Claude · schema-constrained extraction' : 'Offline fixture for the built-in samples · set ANTHROPIC_API_KEY for free text';
+  renderWho();
   if (userChanged) render();
 }
+function currentClinician() { return $('clinician').value.split('|')[0]; }
+function renderWho() { $('who').textContent = initials(currentClinician()); $('who').title = 'Acting as ' + currentClinician(); }
 
 async function extract() {
   const [name, role] = $('clinician').value.split('|');
-  const sampleId = $('sample').value;
-  const s = META.samples.find(x => x.id === sampleId);
-  const note = $('note').value;
+  const sampleId = $('sample').value, s = META.samples.find(x => x.id === sampleId), note = $('note').value;
   $('extractBtn').disabled = true; $('extractBtn').textContent = 'Extracting…'; $('extractErr').textContent = '';
   try {
-    const r = await api('/api/plan', {patient_id: $('patientBox').dataset.pid, note, clinician: {name, role},
-                                       sample_id: note.trim() === s.note.trim() ? sampleId : null});
+    const r = await api('/api/plan', {patient_id: $('patientBox').dataset.pid, note, clinician: {name, role}, sample_id: note.trim() === s.note.trim() ? sampleId : null});
     STATE = r.state; ACTIVE_LOOP = r.loop.id; ADDED = []; EDITS = {}; render();
   } catch (e) { $('extractErr').textContent = e.message; }
   $('extractBtn').disabled = false; $('extractBtn').textContent = 'Extract action plan';
 }
 
-let ADDED = [];  // investigations the clinician adds before approval (client-side until approve)
-let EDITS = {};  // clinician amendments to extracted items, keyed by item id
-
 function edited(itemId, field, value) {
   EDITS[itemId] = {...(EDITS[itemId] || {}), [field]: value};
-  if (field === 'reason') {
-    const box = document.querySelector(`#plan input[data-item="${itemId}"]`);
-    if (box && box.disabled && value.trim()) { box.disabled = false; box.checked = true; }
-  }
+  if (field === 'reason') { const box = document.querySelector(`#plan input[data-item="${itemId}"]`); if (box && box.disabled && value.trim()) { box.disabled = false; box.checked = true; } }
 }
-
-function addItem(loopId) {
+function addItem() {
   const name = $('addName').value.trim(), reason = $('addReason').value.trim();
   if (!name || !reason) { $('planErr').textContent = 'An added investigation needs a name and a clinical indication.'; return; }
-  ADDED.push({name, reason, category: $('addCat').value, urgency: $('addUrg').value});
-  render();
+  ADDED.push({name, reason, category: $('addCat').value, urgency: $('addUrg').value}); render();
 }
-
 async function approve(loopId) {
-  const boxes = [...document.querySelectorAll(`#plan input[data-item]`)];
-  const approved = boxes.filter(b => b.checked).map(b => b.dataset.item);
-  const fuBox = document.querySelector('#plan input[data-fu]');
-  const intervalSel = document.querySelector('#plan select[data-interval]');
-  const edits = EDITS;
+  const approved = [...document.querySelectorAll('#plan input[data-item]')].filter(b => b.checked).map(b => b.dataset.item);
+  const fuBox = document.querySelector('#plan input[data-fu]'), intervalSel = document.querySelector('#plan select[data-interval]');
   try {
-    const r = await api('/api/approve', {loop_id: loopId, approved_investigations: approved,
-      approve_follow_up: fuBox ? fuBox.checked : false,
-      interval_weeks: intervalSel ? parseInt(intervalSel.value) : null,
-      edits, added: ADDED});
+    const r = await api('/api/approve', {loop_id: loopId, approved_investigations: approved, approve_follow_up: fuBox ? fuBox.checked : false,
+      interval_weeks: intervalSel ? parseInt(intervalSel.value) : null, edits: EDITS, added: ADDED});
     ADDED = []; EDITS = {}; STATE = r.state; render();
   } catch (e) { $('planErr').textContent = e.message; }
 }
-
 async function simulateResult(loopId, itemId) { STATE = await api('/api/simulate/result', {loop_id: loopId, item_id: itemId}); render(); }
 async function simulateHold(loopId, itemId) { STATE = await api('/api/simulate/hold', {loop_id: loopId, item_id: itemId}); render(); }
 async function advance(days) { STATE = await api(`/api/simulate/advance?days=${days}`, {}); render(); }
-async function resetAll() { STATE = await api('/api/reset', {}); ACTIVE_LOOP = null; render(); }
-async function action(kind, loopId, extra={}) {
-  try { STATE = await api(`/api/action/${kind}`, {loop_id: loopId, actor: currentClinician(), ...extra}); render(); }
-  catch (e) { alert(e.message); }
-}
-function currentClinician() { return $('clinician').value.split('|')[0]; }
-
-function render() {
-  $('today').textContent = 'Today: ' + fmt(STATE.today);
-  renderPlan(); renderLoops(); renderAlerts(); renderAudit();
+async function resetAll() { STATE = await api('/api/reset', {}); ACTIVE_LOOP = null; ADDED = []; EDITS = {}; render(); }
+async function action(kind, loopId, extra = {}) {
+  try { STATE = await api(`/api/action/${kind}`, {loop_id: loopId, actor: currentClinician(), ...extra}); render(); } catch (e) { alert(e.message); }
 }
 
+function render() { $('today').innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg> Today: ${fmt(STATE.today)}`; renderPlan(); renderTracker(); renderAudit(); }
+
+/* ------------------------------------------------------------ plan */
+function loopStatus(loop) {
+  return {awaiting_approval: ['warn', 'Ready for review'], needs_review: ['bad', 'Decision required'], open: ['ok', 'Approved · tracking'], closed: ['neutral', 'Closed']}[loop.status] || ['neutral', loop.status];
+}
 function renderPlan() {
   const loop = STATE.loops.find(l => l.id === ACTIVE_LOOP) || STATE.loops[STATE.loops.length - 1];
-  if (!loop) { $('plan').innerHTML = '<div class="empty">Extract a plan from a note to begin.</div>'; return; }
+  if (!loop) { $('plan').innerHTML = '<div class="empty">No plan yet.</div>'; $('planStatus').innerHTML = ''; $('planSub').textContent = 'Extract a plan from a note to begin'; return; }
   ACTIVE_LOOP = loop.id;
-  const gate = loop.gate, blocked = gate.requires_human_review;
-  const pending = loop.status === 'awaiting_approval' || loop.status === 'needs_review';
+  const gate = loop.gate, blocked = gate.requires_human_review, pending = loop.status === 'awaiting_approval' || loop.status === 'needs_review';
+  const [cls, label] = loopStatus(loop);
+  $('planStatus').innerHTML = `<span class="status ${cls}"><span class="dot"></span>${label}</span>`;
+  const nBlock = gate.flags.filter(f => f.severity === 'block').length;
+  $('planSub').innerHTML = `${esc(loop.patient.name)} · ${loop.patient.age}${loop.patient.sex} · ${loop.patient.clinic} · <b style="color:${nBlock ? 'var(--bad)' : 'var(--ok)'}">${5 - nBlock} of 5 deterministic checks passed</b> <span class="chip">${loop.id}</span>${!pending && blocked ? '<span class="chip amend">escalated → resolved by clinician</span>' : ''}`;
+
   const icon = s => s === 'block' ? 'block' : s === 'warn' ? 'warn' : 'info';
-  let checks = gate.flags.length
-    ? gate.flags.map(f => `<li><span class="ic ${icon(f.severity)}">${f.severity === 'block' ? '!' : f.severity === 'warn' ? '?' : 'i'}</span><span>${esc(f.message)}</span></li>`).join('')
-    : '';
-  const passedCount = 5 - gate.flags.filter(f => f.severity === 'block').length;
-  checks = `<li><span class="ic ok">✓</span><span>${passedCount} of 5 deterministic checks passed${blocked ? '' : ' — routine plan'}</span></li>` + checks;
+  const checks = gate.flags.length ? `<ul class="checks">${gate.flags.map(f => `<li><span class="ic ${icon(f.severity)}">${f.severity === 'block' ? '!' : f.severity === 'warn' ? '?' : 'i'}</span><span>${esc(f.message)}</span></li>`).join('')}</ul>` : '';
 
   const rows = loop.items.map(i => pending ? `
     <tr>
-      <td><input type="checkbox" data-item="${i.id}" ${(EDITS[i.id]?.reason ?? i.reason) ? 'checked' : 'disabled'} title="Untick to not order"></td>
-      <td><input class="edit" data-name="${i.id}" value="${esc(EDITS[i.id]?.name ?? i.name)}" oninput="edited('${i.id}','name',this.value)"><br><span class="chip">${i.category}</span> <span class="chip">${i.urgency}</span></td>
-      <td><textarea class="edit" data-reason="${i.id}" rows="2" placeholder="Clinical indication required to order" oninput="edited('${i.id}','reason',this.value)">${esc(EDITS[i.id]?.reason ?? (i.reason || ''))}</textarea>
-          ${i.reason ? '' : '<div style="color:var(--bad);font-size:11px">No indication in the note — type one to enable ordering, or leave unticked</div>'}
-          <span class="muted" style="font-size:11px">“${esc(i.evidence)}”</span></td>
+      <td style="width:40px"><input type="checkbox" data-item="${i.id}" ${(EDITS[i.id]?.reason ?? i.reason) ? 'checked' : 'disabled'} title="Untick to leave out of the plan"></td>
+      <td class="name"><input class="edit" data-name="${i.id}" value="${esc(EDITS[i.id]?.name ?? i.name)}" oninput="edited('${i.id}','name',this.value)"><div style="margin-top:5px"><span class="chip">${i.category}</span><span class="chip">${i.urgency}</span></div></td>
+      <td class="ind"><textarea class="edit" data-reason="${i.id}" rows="2" placeholder="Clinical indication required to order" oninput="edited('${i.id}','reason',this.value)">${esc(EDITS[i.id]?.reason ?? (i.reason || ''))}</textarea>
+        ${i.reason ? '' : '<div style="color:var(--bad);font-size:11.5px;margin-top:3px">No indication in the note — type one to enable ordering, or leave unticked</div>'}
+        <span class="q">“${esc(i.evidence)}”</span></td>
+      <td style="width:60px;text-align:right"><button class="small ghost" title="Remove from plan" onclick="const b=document.querySelector('#plan input[data-item=&quot;${i.id}&quot;]'); if(b){b.checked=false;}">Drop</button></td>
     </tr>` : `
     <tr>
-      <td>${pill(i.status)}</td>
-      <td><b>${esc(i.name)}</b>${i.edited_by_clinician ? ' <span class="chip" style="background:#fff3e0;color:var(--human)">amended by clinician</span>' : ''}<br><span class="chip">${i.category}</span> <span class="chip">${i.urgency}</span></td>
-      <td>${esc(i.reason || '—')}<br><span class="muted" style="font-size:11px">“${esc(i.evidence)}”</span></td>
+      <td style="width:130px">${pill(i.status)} ${i.overdue ? pill('overdue') : ''} ${i.on_hold ? pill('on_hold') : ''}</td>
+      <td class="name"><b>${esc(i.name)}${i.edited_by_clinician ? ' <span class="chip amend">amended by clinician</span>' : ''}</b><span class="chip">${i.category}</span><span class="chip">${i.urgency}</span></td>
+      <td class="ind">${esc(i.reason || '—')}<span class="q">“${esc(i.evidence)}”</span></td>
+      <td style="width:60px"></td>
     </tr>`).join('');
-  const addRow = pending ? `
-    <tr class="addrow">
-      <td><span class="muted" style="font-size:16px">+</span></td>
-      <td><input class="edit" id="addName" placeholder="Add investigation…"><br>
-          <select id="addCat" style="width:auto;padding:3px 6px;font-size:12px"><option>imaging</option><option>bloods</option><option>biopsy</option><option selected>other</option></select>
-          <select id="addUrg" style="width:auto;padding:3px 6px;font-size:12px"><option selected>routine</option><option>urgent</option></select></td>
-      <td><textarea class="edit" id="addReason" rows="2" placeholder="Clinical indication"></textarea>
-          <button class="small" onclick="addItem('${loop.id}')">Add to plan</button></td>
-    </tr>` : '';
-  const addedRows = pending ? ADDED.map((a, idx) => `
-    <tr>
-      <td><span class="chip" style="background:#fff3e0;color:var(--human)">added</span></td>
-      <td><b>${esc(a.name)}</b><br><span class="chip">${a.category}</span> <span class="chip">${a.urgency}</span></td>
-      <td>${esc(a.reason)} <button class="small ghost" onclick="ADDED.splice(${idx},1);render()">remove</button></td>
-    </tr>`).join('') : '';
+  const addedRows = pending ? ADDED.map((a, idx) => `<tr><td><span class="chip amend">added</span></td><td class="name"><b>${esc(a.name)}</b><span class="chip">${a.category}</span><span class="chip">${a.urgency}</span></td><td class="ind">${esc(a.reason)}</td><td style="text-align:right"><button class="small ghost" onclick="ADDED.splice(${idx},1);render()">Remove</button></td></tr>`).join('') : '';
+  const addRow = pending ? `<tr class="addrow"><td style="color:var(--muted);font-size:18px;text-align:center">+</td>
+      <td class="name"><input class="edit" id="addName" placeholder="Add investigation…"><div style="margin-top:5px;display:flex;gap:6px"><select id="addCat" style="width:auto;padding:3px 6px;font-size:12px"><option>imaging</option><option>bloods</option><option>biopsy</option><option selected>other</option></select><select id="addUrg" style="width:auto;padding:3px 6px;font-size:12px"><option selected>routine</option><option>urgent</option></select></div></td>
+      <td class="ind"><textarea class="edit" id="addReason" rows="2" placeholder="Clinical indication"></textarea></td>
+      <td style="text-align:right"><button class="small" onclick="addItem()">Add</button></td></tr>` : '';
 
-  const fu = loop.plan.follow_up;
-  const cands = fu ? [...new Set(fu.interval_candidates_weeks)].sort((a,b)=>a-b) : [];
-  let fuHtml = '<div class="muted">No follow-up in the note.</div>';
+  // follow-up
+  const fu = loop.plan.follow_up, cands = fu ? [...new Set(fu.interval_candidates_weeks)].sort((a, b) => a - b) : [];
+  const suggested = gate.flags.find(f => f.code === 'follow_up_before_results')?.detail?.suggested_interval_weeks;
+  const opts = [...new Set([...(cands.length ? cands : [2, 4, 6, 8, 12]), ...(suggested ? [suggested] : []), 4, 6, 8, 12])].sort((a, b) => a - b);
+  let fuHtml = '<div class="fu-row muted">No follow-up in the note.</div>';
   if (fu) {
-    const suggested = gate.flags.find(f => f.code === 'follow_up_before_results')?.detail?.suggested_interval_weeks;
-    const opts = [...new Set([...(cands.length ? cands : [2,4,6,8,12]), ...(suggested ? [suggested] : []), 4,6,8,12])].sort((a,b)=>a-b);
-    const intervalCtl = pending && (cands.length !== 1 || gate.reasons.includes('follow_up_before_results'))
-      ? `<select data-interval style="width:auto;display:inline-block">${opts.map(w => `<option value="${w}" ${w === suggested ? 'selected' : ''}>${w} weeks${cands.includes(w) ? ' (in note)' : ''}${w === suggested ? ' — earliest workable' : ''}</option>`).join('')}</select>`
+    const ctl = pending && (cands.length !== 1 || gate.reasons.includes('follow_up_before_results'))
+      ? `<select data-interval style="width:auto;display:inline-block;padding:5px 8px">${opts.map(w => `<option value="${w}" ${w === suggested ? 'selected' : ''}>${w} weeks${cands.includes(w) ? ' (in note)' : ''}${w === suggested ? ' — earliest workable' : ''}</option>`).join('')}</select>`
       : `<b>${loop.follow_up_weeks} weeks</b>`;
-    fuHtml = `<div class="row">${pending ? `<input type="checkbox" data-fu checked>` : ''}
-      <span>Follow-up in ${intervalCtl} with <b>${loop.reviewer_role}</b>${fu.purpose ? ` · <span class="muted">${esc(fu.purpose)}</span>` : ''}</span></div>
-      <div class="muted" style="font-size:11px;margin-left:22px">“${esc(fu.evidence)}”</div>`;
+    const appt = loop.appointment;
+    fuHtml = `<div class="fu-row">${pending ? '<input type="checkbox" data-fu checked style="width:auto">' : (appt ? pill('booked_fu', 'Booked ' + fmt(appt.date)) : pill('proposed', 'not booked'))}
+      <div style="flex:1"><b>Follow-up</b> in ${ctl} with <b>${loop.reviewer_role}</b>${appt ? ` · ${esc(appt.reviewer_name)}` : ''}${fu.purpose ? ` <span class="muted">· ${esc(fu.purpose)}</span>` : ''}<div class="muted" style="font-size:11.5px;font-style:italic">“${esc(fu.evidence)}”</div></div></div>`;
   }
 
   let decision = '';
   if (pending && blocked) {
+    const f = gate.flags.find(f => f.code === 'follow_up_before_results');
     const guide = {
       conflicting_follow_up_interval: `The note gives more than one interval (${cands.map(w => w + ' wk').join(' and ')}). Choose which one you meant.`,
-      follow_up_before_results: (() => { const f = gate.flags.find(f => f.code === 'follow_up_before_results'); return `Results are not expected until ${fmt(f?.detail?.earliest_date)}. Choose ${f?.detail?.suggested_interval_weeks ?? 'a later'} weeks or later, or drop an investigation.`; })(),
+      follow_up_before_results: `Results are not expected until ${fmt(f?.detail?.earliest_date)}. Choose ${f?.detail?.suggested_interval_weeks ?? 'a later'} weeks or later, or drop an investigation.`,
       missing_follow_up_interval: 'The note asks for follow-up but gives no interval. Choose one.',
       missing_indication: 'Type a clinical indication for the flagged investigation, or untick it so it is not ordered.',
     };
-    decision = `<div class="decision"><h4>Clinician decision required — the system will not guess</h4>
-      ${gate.reasons.map(r => `<div style="margin:4px 0"><span class="chip">${r.replace(/_/g,' ')}</span> <span style="font-size:13px">${guide[r] || ''}</span></div>`).join('')}
-      <div class="muted mt" style="font-size:12px">Nothing is ordered or booked until you approve. Your choice is checked by the same rules.</div></div>`;
+    decision = `<div class="decision"><h4>Clinician decision required — the system will not guess</h4>${gate.reasons.map(r => `<div style="margin:4px 0"><span class="chip">${nice(r)}</span> ${guide[r] || ''}</div>`).join('')}<div class="muted" style="font-size:12px;margin-top:6px">Nothing is ordered or booked until you approve. Your choice is checked by the same rules.</div></div>`;
   }
 
   let after = '';
   if (!pending) {
-    const appt = loop.appointment;
-    after = `<div class="pack"><b>Approved by ${esc(loop.approved_by.name)} on ${fmt(loop.approved_on)}.</b>
-      ${appt ? `Follow-up ${fmt(appt.date)} with ${esc(appt.reviewer_name)} (${appt.clinic}) ${pill(appt.status)}` : 'No follow-up booked.'}
-      <div class="row" style="margin-top:6px;gap:14px;font-size:12px">
-        <span><b style="font-size:16px;color:var(--api)">${loop.counts?.api_actions ?? 0}</b> admin actions by software</span>
-        <span><b style="font-size:16px;color:var(--rule)">${loop.counts?.rule_checks ?? 0}</b> rule checks</span>
-        <span><b style="font-size:16px;color:var(--human)">${loop.counts?.human_decisions ?? 0}</b> clinician decision${(loop.counts?.human_decisions ?? 0) === 1 ? '' : 's'}</span>
-      </div></div>`;
+    const appt = loop.appointment, c = loop.counts || {};
+    after = `<div class="approved"><div class="top"><span class="avatar">${initials(loop.approved_by.name)}</span><div><b>Approved by ${esc(loop.approved_by.name)}</b><div class="muted" style="font-size:12px">${loop.approved_by.role} · ${loop.patient.clinic} · ${fmt(loop.approved_on)}</div></div>
+        ${appt ? `<div class="booked ${appt.status === 'at_risk' ? 'risk' : ''}"><b>${appt.status === 'at_risk' ? '⚠ At risk · ' : '✓ '}Booked for ${fmt(appt.date)}</b>Follow-up with ${esc(appt.reviewer_name)}</div>` : '<div class="booked" style="background:var(--sys-soft);border-color:var(--line)"><b style="color:var(--muted)">No follow-up booked</b></div>'}</div>
+      <div class="counts"><span><b style="color:var(--api)">${c.api_actions ?? 0}</b>admin actions by software</span><span><b style="color:var(--rule)">${c.rule_checks ?? 0}</b>rule checks</span><span><b style="color:var(--human)">${c.human_decisions ?? 0}</b>clinician decision${c.human_decisions === 1 ? '' : 's'}</span></div></div>`;
     const received = loop.items.filter(i => i.result);
-    if (received.length) after += `<div class="pack"><b>Pre-clinic pack</b> (auto-assembled for ${esc(appt ? appt.reviewer_name : 'reviewer')}):<br>` +
-      received.map(i => `• ${esc(i.name)} (${fmt(i.result_on)}): ${esc(i.result)}`).join('<br>') + `<br>• Previous plan: ${esc(loop.plan.follow_up?.purpose || '')}</div>`;
+    if (received.length) after += `<div class="pack"><b>Pre-clinic pack</b> <span class="muted">auto-assembled for ${esc(appt ? appt.reviewer_name : 'the reviewer')}</span><br>${received.map(i => `• ${esc(i.name)} (${fmt(i.result_on)}): ${esc(i.result)}`).join('<br>')}<br>• Previous plan: ${esc(loop.plan.follow_up?.purpose || '—')}</div>`;
   }
 
-  $('plan').innerHTML = `
-    <div class="row"><b>${esc(loop.patient.name)}</b> <span class="muted">${loop.patient.age}${loop.patient.sex} · ${loop.patient.clinic}</span> ${pill(loop.status)} <span class="chip">${loop.id}</span>${!pending && blocked ? '<span class="chip" style="background:#fff3e0;color:var(--human)">escalated → resolved by clinician</span>' : ''}</div>
-    <ul class="checks mt">${checks}</ul>
-    <table><thead><tr><th style="width:34px"></th><th>Investigation</th><th>Clinical indication (from note${pending ? ' — editable' : ''})</th></tr></thead><tbody>${rows}${addedRows}${addRow}</tbody></table>
-    <div class="mt">${fuHtml}</div>
-    ${decision}
-    ${pending ? `<div class="row mt"><button class="primary" onclick="approve('${loop.id}')">Approve &amp; action plan</button><span class="muted" style="font-size:12px">One click: order · book · message · record · track</span></div><div class="err" id="planErr"></div>` : after}`;
+  $('plan').innerHTML = `${checks}
+    <table><thead><tr><th>${pending ? 'Include' : 'Status'}</th><th>Investigation</th><th>Clinical indication (from note${pending ? ' — editable' : ''})</th><th></th></tr></thead><tbody>${rows}${addedRows}${addRow}</tbody></table>
+    ${fuHtml}${decision}
+    ${pending ? `<div class="row" style="margin-top:14px"><button class="primary" onclick="approve('${loop.id}')">Approve &amp; action plan</button><span class="hint">One click: order · book · message · record · track</span></div><div class="err" id="planErr"></div>` : after}`;
 }
 
-function renderLoops() {
-  if (!STATE.loops.length) { $('loops').innerHTML = '<div class="empty">No open loops yet.</div>'; return; }
+/* --------------------------------------------------------- tracker */
+const ICONS = {
+  loop: '<svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>',
+  bell: '<svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round"><path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></svg>',
+};
+function renderTracker() {
   const open = STATE.loops.filter(l => l.status === 'open');
   const awaiting = open.flatMap(l => l.items).filter(i => i.status === 'result_awaited');
-  const overdue = awaiting.filter(i => i.overdue);
-  const strip = `<div class="row" style="gap:14px;font-size:12px;margin-bottom:10px;color:var(--muted)">
-      <span><b style="font-size:16px;color:var(--ink)">${open.length}</b> open loop${open.length === 1 ? '' : 's'}</span>
-      <span><b style="font-size:16px;color:var(--api)">${awaiting.length}</b> results awaited</span>
-      <span><b style="font-size:16px;color:${overdue.length ? 'var(--bad)' : 'var(--ok)'}">${overdue.length}</b> overdue</span>
-      <span><b style="font-size:16px;color:${STATE.notifications.length ? 'var(--warn)' : 'var(--ok)'}">${STATE.notifications.length}</b> alert${STATE.notifications.length === 1 ? '' : 's'} open</span>
-    </div>`;
-  $('loops').innerHTML = strip + STATE.loops.slice().reverse().map(l => {
-    const appt = l.appointment;
-    const items = l.items.map(i => `
-      <div class="item">
-        <span class="name">${esc(i.name)}</span>
-        ${pill(i.status)} ${i.overdue ? pill('overdue') : ''} ${i.on_hold ? pill('on_hold') : ''}
-        ${i.status === 'result_awaited' ? `<span class="muted" style="font-size:11px">due ${fmt(i.expected_by)}</span>
-           <button class="small" onclick="event.stopPropagation();simulateResult('${l.id}','${i.id}')">simulate result</button>
-           ${!i.on_hold && i.category === 'imaging' ? `<button class="small ghost" onclick="event.stopPropagation();simulateHold('${l.id}','${i.id}')">simulate hold</button>` : ''}` : ''}
-        ${i.status === 'result_received' ? `<span class="muted" style="font-size:11px">in ${fmt(i.result_on)}</span>` : ''}
-      </div>`).join('');
+  const overdue = awaiting.filter(i => i.overdue), nAlerts = STATE.notifications.length;
+  $('tiles').innerHTML = `<div class="tiles">
+    <div class="tile">${ICONS.loop}<b>${open.length}</b><span>Open loop${open.length === 1 ? '' : 's'}</span></div>
+    <div class="tile">${ICONS.clock}<b>${awaiting.length}</b><span>Results awaited</span></div>
+    <div class="tile">${overdue.length ? ICONS.bell : ICONS.check}<b style="color:${overdue.length ? 'var(--bad)' : 'inherit'}">${overdue.length}</b><span>Overdue</span></div>
+    <div class="tile">${nAlerts ? ICONS.bell : ICONS.check}<b style="color:${nAlerts ? 'var(--bad)' : 'inherit'}">${nAlerts}</b><span>Alert${nAlerts === 1 ? '' : 's'} open</span></div></div>`;
+  renderAlerts();
+  $('loopCount').textContent = STATE.loops.length ? `${STATE.loops.length} patient${STATE.loops.length === 1 ? '' : 's'} · newest first` : '';
+  if (!STATE.loops.length) { $('loops').innerHTML = '<div class="empty">No open loops yet.</div>'; return; }
+  $('loops').innerHTML = STATE.loops.slice().reverse().map(l => {
+    const appt = l.appointment, [cls, label] = loopStatus(l);
+    const items = l.items.map(i => {
+      const k = i.status === 'result_received' || i.status === 'reviewed' ? 'done' : i.overdue ? 'bad' : i.on_hold ? 'hold' : '';
+      return `<div class="ev ${k}"><div class="t"><b>${esc(i.name)}</b><span>${i.ordered_on ? 'ordered ' + fmt(i.ordered_on) : 'proposed'}</span></div>
+        <div class="s">${pill(i.status)}${i.overdue ? pill('overdue') : ''}${i.on_hold ? pill('on_hold') : ''}
+          ${i.status === 'result_awaited' ? `<span>due ${fmt(i.expected_by)}</span><span class="demo">demo</span><button class="small" onclick="event.stopPropagation();simulateResult('${l.id}','${i.id}')">result arrives</button>${!i.on_hold && i.category === 'imaging' ? `<button class="small ghost" onclick="event.stopPropagation();simulateHold('${l.id}','${i.id}')">put on hold</button>` : ''}` : ''}
+          ${i.status === 'result_received' ? `<span>received ${fmt(i.result_on)}</span>` : ''}</div></div>`;
+    }).join('');
+    const fuEv = appt ? `<div class="ev ${appt.status === 'at_risk' ? 'bad' : 'done'}"><div class="t"><b>Follow-up</b><span>${fmt(appt.date)}</span></div><div class="s">${pill(appt.status)}<span>with ${esc(appt.reviewer_name)}</span></div></div>`
+                      : `<div class="ev"><div class="t"><b>Follow-up</b><span>—</span></div><div class="s">${pill('proposed', 'not booked')}</div></div>`;
+    const closeBtn = l.status === 'open' && appt && STATE.today >= appt.date ? `<div class="row" style="margin-top:8px"><button class="small" onclick="event.stopPropagation();action('close','${l.id}')">Results reviewed with patient — close loop</button></div>` : '';
     return `<div class="loop ${l.id === ACTIVE_LOOP ? 'active' : ''}" onclick="ACTIVE_LOOP='${l.id}';render()">
-      <div class="row"><h3>${esc(l.patient.name)}</h3> ${pill(l.status)} <span class="chip">${l.id}</span><div class="spacer"></div><span class="muted" style="font-size:11px">opened ${fmt(l.created)}</span></div>
-      ${items}
-      <div class="item"><span class="name">Follow-up</span>${appt ? `<span>${fmt(appt.date)} · ${esc(appt.reviewer_name)}</span> ${pill(appt.status)}` : '<span class="muted">not booked</span>'}</div>
-      ${l.status === 'open' && appt && STATE.today >= appt.date ? `<div class="row mt"><button class="small" onclick="event.stopPropagation();action('close','${l.id}')">Results reviewed with patient — close loop</button></div>` : ''}
-    </div>`;
+      <div class="loop-h"><h3>${esc(l.patient.name)}</h3><span class="status ${cls}" style="padding:3px 9px"><span class="dot"></span>${label}</span><span class="chip">${l.id}</span><div class="spacer"></div><span class="hint">opened ${fmt(l.created)}</span></div>
+      <div class="tl">${items}${fuEv}</div>${closeBtn}</div>`;
   }).join('');
 }
-
 function renderAlerts() {
   const ns = STATE.notifications;
   if (!ns.length) { $('alerts').innerHTML = ''; return; }
+  const defaultDate = (() => { const d = new Date(STATE.today + 'T00:00:00'); d.setDate(d.getDate() + 14); return d.toISOString().slice(0, 10); })();
   $('alerts').innerHTML = ns.map(n => {
-    const loop = STATE.loops.find(l => l.id === n.loop_id);
-    const defaultDate = (() => { const d = new Date(STATE.today + 'T00:00:00'); d.setDate(d.getDate() + 14); return d.toISOString().slice(0,10); })();
     const btns = n.actions.map(a => {
-      if (a === 'resolve_hold') return `<span class="row" style="gap:4px"><span class="muted" style="font-size:11px">agreed with department — expected by</span><input type="date" id="rh-${n.id}" value="${defaultDate}" style="width:auto;padding:3px 6px;font-size:12px">
-          <button class="small" onclick="action('resolve_hold','${n.loop_id}',{item_id:'${n.item_id}', results_expected: document.getElementById('rh-${n.id}').value})">Hold resolved</button></span>`;
       if (a === 'chase') return `<button class="small" onclick="action('chase','${n.loop_id}',{item_id:'${n.item_id}'})">Chase department</button>`;
       if (a === 'acknowledge') return `<button class="small ghost" onclick="action('acknowledge','${n.loop_id}',{notification_id:'${n.id}'})">Acknowledge</button>`;
       if (a === 'keep') return `<button class="small ghost" onclick="action('keep','${n.loop_id}')">Keep appointment</button>`;
       if (a === 'close') return `<button class="small" onclick="action('close','${n.loop_id}')">Seen &amp; reviewed — close loop</button>`;
-      if (a === 'rebook') return `<span class="row" style="gap:4px"><span class="muted" style="font-size:11px">results expected by</span><input type="date" id="rb-${n.id}" value="${defaultDate}" style="width:auto;padding:3px 6px;font-size:12px">
-          <button class="small" onclick="action('rebook','${n.loop_id}',{results_expected: document.getElementById('rb-${n.id}').value})">Rebook after results</button></span>`;
+      if (a === 'rebook') return `<span class="row" style="gap:6px"><span class="hint">results expected by</span><input type="date" id="rb-${n.id}" value="${defaultDate}" style="width:auto;padding:4px 8px;font-size:12px"><button class="small" onclick="action('rebook','${n.loop_id}',{results_expected: document.getElementById('rb-${n.id}').value})">Rebook after results</button></span>`;
+      if (a === 'resolve_hold') return `<span class="row" style="gap:6px"><span class="hint">agreed with department — expected by</span><input type="date" id="rh-${n.id}" value="${defaultDate}" style="width:auto;padding:4px 8px;font-size:12px"><button class="small" onclick="action('resolve_hold','${n.loop_id}',{item_id:'${n.item_id}', results_expected: document.getElementById('rh-${n.id}').value})">Hold resolved</button></span>`;
       return '';
     }).join(' ');
-    return `<div class="alert ${n.kind}"><b>Alert · ${n.kind.replace(/_/g,' ')} · owner ${esc(n.owner)}</b>
-      <div><b style="display:inline;text-transform:none;color:var(--ink);letter-spacing:0">${esc(n.patient_name)}</b>: ${esc(n.message)}</div>
-      <div class="row" style="margin-top:6px">${btns}</div></div>`;
+    return `<div class="alert ${n.kind}"><div class="k">Alert · ${nice(n.kind)} · owner ${esc(n.owner)}</div><div class="m"><b>${esc(n.patient_name)}</b>: ${esc(n.message)}</div><div class="row">${btns}</div></div>`;
   }).join('');
 }
 
+/* ----------------------------------------------------------- audit */
 function toggleAudit() {
-  const body = $('auditBody'), hidden = !body.hidden;
-  body.hidden = hidden;
+  const body = $('auditBody'), hidden = !body.hidden; body.hidden = hidden;
   $('auditToggle').textContent = hidden ? '▸ Show' : '▾ Hide';
   try { localStorage.setItem('pp.auditHidden', hidden ? '1' : '0'); } catch (e) {}
 }
+function auditRows() {
+  const mine = $('auditMine')?.checked && ACTIVE_LOOP, q = ($('auditSearch')?.value || '').toLowerCase();
+  return STATE.audit.filter(e => (!mine || e.loop_id === ACTIVE_LOOP) && (!AUDIT_FILTER || e.actor === AUDIT_FILTER) && (!q || e.message.toLowerCase().includes(q))).slice().reverse();
+}
 function renderAudit() {
-  const el = $('audit');
-  const mine = $('auditMine')?.checked && ACTIVE_LOOP;
-  el.innerHTML = STATE.audit.filter(e => !mine || e.loop_id === ACTIVE_LOOP).slice().reverse().map(e =>
-    `<div><span class="d">${e.date}</span><span class="actor ${e.actor}">${e.actor}</span><span class="lid">${e.loop_id || ''}</span><span>${esc(e.message)}</span></div>`).join('') || '<div class="empty">No events yet.</div>';
+  const rows = auditRows();
+  $('audit').innerHTML = rows.map(e => {
+    const loop = STATE.loops.find(l => l.id === e.loop_id);
+    return `<tr><td class="d" title="recorded ${e.recorded_at || ''}">${e.date}</td><td><span class="actor ${e.actor}">${ACTOR_LABEL[e.actor]}</span></td><td>${esc(e.message)}</td><td class="muted" style="white-space:nowrap">${e.loop_id ? `${e.loop_id} · ${esc(loop?.patient?.name || '')}` : ''}</td></tr>`;
+  }).join('') || '<tr><td colspan="4" class="empty">No events match.</td></tr>';
+}
+function downloadLog() {
+  const rows = auditRows().reverse();
+  const csv = ['date,recorded_at,source,loop,message', ...rows.map(e => [e.date, e.recorded_at || '', ACTOR_LABEL[e.actor], e.loop_id || '', '"' + e.message.replace(/"/g, '""') + '"'].join(','))].join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv'})); a.download = `plugpoint-audit-${STATE.today}.csv`; a.click();
 }
 
 init();

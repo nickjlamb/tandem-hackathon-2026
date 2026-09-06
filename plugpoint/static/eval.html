@@ -36,6 +36,24 @@
   .checks .x{color:var(--bad)}
   .muted{color:var(--muted)}
   details summary{cursor:pointer;color:var(--api);font-size:12px}
+  header{flex-wrap:wrap}
+  .hdr-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  @media (max-width:820px){
+    header{padding:10px 14px;gap:10px}
+    main{padding:14px}
+    .card{padding:14px}
+    #mode{flex-basis:100%;order:3}
+    .hdr-actions{flex-basis:100%;order:4}
+    .hdr-actions button{flex:1;padding:9px 10px;font-size:13px}
+    .tiles{grid-template-columns:repeat(3,1fr);gap:8px}
+    .tile b{font-size:24px}
+    .tile span{font-size:11px}
+    th:nth-child(3),td:nth-child(3),th:nth-child(5),td:nth-child(5){display:none}
+    td,th{padding:8px 4px}
+    .checks{word-break:break-word}
+  }
+  @media (max-width:480px){.tiles{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:820px){[data-m]{display:inline-block!important}}
   .bar{height:10px;border-radius:5px;background:#fdecea;overflow:hidden;margin-top:6px}
   .bar div{height:100%;background:var(--ok)}
 </style>
@@ -48,8 +66,10 @@
   <a href="/" style="font-size:13px">← back to workflow</a>
   <div class="spacer"></div>
   <span class="muted" id="mode" style="font-size:12px"></span>
-  <button onclick="run(true)" id="btnOff">Run offline (rules + tracker)</button>
-  <button class="primary" onclick="run(false)" id="btnLive">Run with live extraction</button>
+  <div class="hdr-actions">
+    <button onclick="run(true)" id="btnOff">Run offline (rules + tracker)</button>
+    <button class="primary" onclick="run(false)" id="btnLive">Run with live extraction</button>
+  </div>
 </header>
 <main>
   <div class="card">
@@ -89,7 +109,7 @@ function render(data) {
       <td><span class="pill ${r.passed ? 'PASS' : 'FAIL'}">${r.passed ? 'PASS' : 'FAIL'}</span></td>
       <td><b>${r.id}</b></td>
       <td><span class="chip ${r.type}">${r.type}</span></td>
-      <td>${esc(r.title)}<br>
+      <td><span class="chip ${r.type}" style="display:none" data-m>${r.type}</span> ${esc(r.title)}${r.expected_escalation ? ' <span class="chip escalation" style="display:none" data-m>must escalate</span>' : ''}<br>
         <details><summary>${r.checks.length} checks · ${r.checks.filter(c => !c.ok).length} failed · extraction: ${r.source}</summary>
           <div class="checks">${r.checks.map(c => `<div class="${c.ok ? '' : 'x'}">${c.ok ? '✓' : '✗'} ${esc(c.name)}: expected ${esc(JSON.stringify(c.expected))}${c.ok ? '' : ', got ' + esc(JSON.stringify(c.actual))}</div>`).join('')}</div>
         </details></td>

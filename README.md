@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/images/logo.svg" alt="" width="72" height="72">
+
 # PlugPoint
 
 **Closes the loop after outpatient clinic — so no patient is lost to follow-up.**
@@ -12,9 +14,6 @@ Turns a clinician's dictated plan into a tracked, approved action plan: investig
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Built at NXGN × Tandem Health hackathon](https://img.shields.io/badge/built%20at-NXGN%20%C3%97%20Tandem%20Health%20hackathon%202026-6b4fbb)](#about)
 [![Synthetic data only](https://img.shields.io/badge/data-synthetic%20only-1f8a5b)](#safety-and-data)
-[![Live demo](https://img.shields.io/badge/live%20demo-railway-0B0D0E?logo=railway&logoColor=white)](https://web-production-4653b.up.railway.app)
-
-**[▶ Try the live demo](https://web-production-4653b.up.railway.app)** · no login, synthetic data, resets on "Reset demo"
 
 [Quick start](#quick-start-60-seconds) · [How it works](#how-it-works) · [Architecture](#architecture) · [Examples](#examples) · [Evaluation](#evaluation) · [Roadmap](#roadmap) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
 
@@ -59,14 +58,48 @@ cp .env.example .env     # add ANTHROPIC_API_KEY=...
 
 Requirements: Python 3.11+. Tested on macOS and Linux.
 
-**Hosted demo:** https://web-production-4653b.up.railway.app — deployed on [Railway](https://railway.app) straight from this repo (the `Procfile` is all it needs). A [`render.yaml`](render.yaml) blueprint is included too. Add `ANTHROPIC_API_KEY` as an environment variable on the host to enable live extraction; without it the app runs in offline-fixture mode.
+**Deploy in one click:** the repo includes a [`render.yaml`](render.yaml) blueprint — on [Render](https://render.com) choose *New → Blueprint*, pick this repo, and it's live on a free instance in a few minutes (add `ANTHROPIC_API_KEY` in the dashboard for live extraction). A `Procfile` is included for Railway / Heroku-style hosts.
 
 ## How it works
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/architecture-dark.svg">
-  <img src="docs/images/architecture-light.svg" alt="PlugPoint architecture. Forward path: a clinic note goes through exactly one AI step that extracts the action plan the clinician already made, then five deterministic rule checks. Routine plans go to a clinician for approval; blocked ones stop at a human decision — the system never guesses — and return once resolved. Only after approval do the mocked integrations act: orders, booking, patient message, EPR. Closing the loop: every item gets an expected-by date in the tracker, overdue items and at-risk appointments raise an alert to a named owner who chases, rebooks or resolves a hold, and the cycle repeats until results are reviewed and the loop closes. Every node carries the audit label it writes: AI, RULE, HUMAN, API or SYSTEM." width="100%">
-</picture>
+```mermaid
+flowchart LR
+    N[Clinic note<br/><i>Tandem / dictation</i>] --> AI
+    subgraph AI[AI · one structured call]
+        X[Extract ActionPlan<br/>investigations · indications<br/>follow-up · reviewer]
+    end
+    AI --> R
+    subgraph R[RULE · deterministic]
+        C1[indication stated]
+        C2[single interval]
+        C3[appointment after results]
+        C4[reviewer resolved]
+    end
+    R -->|routine| H[HUMAN · approve<br/>edit · add · drop items]
+    R -->|blocked| D[HUMAN · decide<br/>choose interval · add indication]
+    D --> H
+    H --> A
+    subgraph A[API · mocked integrations]
+        O[Order comms]
+        P[PAS booking]
+        S[Patient SMS]
+        E[EPR record]
+    end
+    A --> T
+    subgraph T[SYSTEM · tracker]
+        T1[expected-by dates]
+        T2[overdue · at risk · on hold]
+        T3[alerts to named owner]
+    end
+    T -->|chase · rebook · resolve hold · close| H2[HUMAN]
+    H2 --> Z[(Loop closed<br/>results reviewed)]
+    classDef ai fill:#efe9fb,stroke:#6b4fbb,color:#2b1d5c
+    classDef rule fill:#e6f5ee,stroke:#1f8a5b,color:#0f4a30
+    classDef human fill:#fff3e0,stroke:#c77d0a,color:#5c3a00
+    classDef api fill:#e8f0fc,stroke:#1f5fbf,color:#0e2f66
+    classDef sys fill:#eef2f7,stroke:#66717f,color:#1c2430
+    class X ai; class C1,C2,C3,C4 rule; class H,D,H2 human; class O,P,S,E api; class T1,T2,T3 sys
+```
 
 **Workflow, not agent.** There is exactly one LLM call, and it does the only thing an LLM is needed for — turning messy language into structured data. Everything after that is `if` statements, dates and state transitions, so the same input always gives the same behaviour and the behaviour can be tested.
 
@@ -164,7 +197,7 @@ python -m eval.run_eval --offline    # rules + gate + tracker, no network, ~1 s
 python -m eval.run_eval              # live Claude extraction (~1 min)
 ```
 
-Results at **http://localhost:8000/eval** (or [the hosted one](https://web-production-4653b.up.railway.app/eval)) and in `eval/results-{offline,live}.json`.
+Results at **http://localhost:8000/eval** and in `eval/results-{offline,live}.json`.
 
 | Run | Passed | Escalation cases | Escalations auto-actioned |
 |-----|--------|------------------|---------------------------|

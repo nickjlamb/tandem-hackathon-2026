@@ -17,7 +17,8 @@
   a{color:var(--api)}
   button{font:inherit;padding:8px 14px;border-radius:9px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--ink);font-weight:500}
   button.primary{background:var(--api);border-color:var(--api);color:#fff;font-weight:600}
-  button:disabled{opacity:.5;cursor:wait}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  code{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;background:#eef2f7;padding:1px 5px;border-radius:5px}
   main{padding:16px 20px;max-width:1300px;margin:0 auto}
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:16px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 6px 20px -10px rgba(15,23,42,.10)}
   .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
@@ -71,6 +72,10 @@
     <button class="primary" onclick="run(false)" id="btnLive">Run with live extraction</button>
   </div>
 </header>
+<div id="noKey" hidden style="margin:14px 20px 0;max-width:1300px;margin-inline:auto;padding:0 20px"><div class="card" style="margin:14px 0 0;display:flex;gap:10px;align-items:flex-start;border-color:#f6dfb0;background:#fffaf0">
+  <span style="flex:none;width:22px;height:22px;border-radius:50%;background:#fff4e0;color:#d97706;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">!</span>
+  <div style="font-size:13px"><b>Live extraction isn't available on this server</b> — no <code>ANTHROPIC_API_KEY</code> is configured, so only the offline run (rules, gate and tracker against fixture extractions) can be executed here. To run the live evaluation, set the key in <code>.env</code> locally or as an environment variable on the host. The last live result is recorded in the README.</div>
+</div></div>
 <main>
   <div class="card">
     <div class="muted" style="font-size:13px">15 synthetic cases run through the <b>same</b> workflow code as the app: extract → rules → gate → approve → mocked actions → tracker events. Expected behaviour was specified by the team; failures are reported as found. Nothing in the production workflow is adjusted for the eval.</div>
@@ -80,7 +85,16 @@
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-async function load() { const r = await fetch('/api/eval/results'); render(await r.json()); }
+async function load() {
+  try {
+    const m = await (await fetch('/api/meta')).json();
+    if (m.llm !== 'claude') {
+      $('btnLive').disabled = true; $('btnLive').title = 'Set ANTHROPIC_API_KEY on the server to enable live extraction';
+      $('btnLive').textContent = 'Live extraction unavailable'; $('noKey').hidden = false;
+    }
+  } catch (e) {}
+  const r = await fetch('/api/eval/results'); render(await r.json());
+}
 async function run(offline) {
   $('btnOff').disabled = $('btnLive').disabled = true;
   $('out').innerHTML = `<div class="card">Running ${offline ? 'offline' : 'with live extraction (≈1 min for 15 calls)'}…</div>`;

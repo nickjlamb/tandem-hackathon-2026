@@ -11,4 +11,6 @@ PlugPoint closes the loop after outpatient clinic. It reads the clinician's plan
 - Gold evaluation: 15 synthetic cases through the production workflow — offline 15/15, live extraction 11/15 with **0 escalations auto-actioned** in either run.
 - Runs in 60 seconds with no API key.
 
+**Live demo:** https://web-production-4653b.up.railway.app
+
 Full details in [CHANGELOG.md](CHANGELOG.md).

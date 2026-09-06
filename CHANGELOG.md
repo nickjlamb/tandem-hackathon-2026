@@ -6,6 +6,9 @@ All notable changes to PlugPoint are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- Hosted demo on Railway: https://web-production-4653b.up.railway.app
+
 ### Known issues
 - A note that explicitly says "no follow-up needed" can be extracted as a follow-up with no interval, which the rules then escalate. Found by the live gold run; fix pending a one-line clarification of the extraction prompt.
 

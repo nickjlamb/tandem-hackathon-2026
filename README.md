@@ -12,6 +12,9 @@ Turns a clinician's dictated plan into a tracked, approved action plan: investig
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Built at NXGN × Tandem Health hackathon](https://img.shields.io/badge/built%20at-NXGN%20%C3%97%20Tandem%20Health%20hackathon%202026-6b4fbb)](#about)
 [![Synthetic data only](https://img.shields.io/badge/data-synthetic%20only-1f8a5b)](#safety-and-data)
+[![Live demo](https://img.shields.io/badge/live%20demo-railway-0B0D0E?logo=railway&logoColor=white)](https://web-production-4653b.up.railway.app)
+
+**[▶ Try the live demo](https://web-production-4653b.up.railway.app)** · no login, synthetic data, resets on "Reset demo"
 
 [Quick start](#quick-start-60-seconds) · [How it works](#how-it-works) · [Architecture](#architecture) · [Examples](#examples) · [Evaluation](#evaluation) · [Roadmap](#roadmap) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
 
@@ -56,7 +59,7 @@ cp .env.example .env     # add ANTHROPIC_API_KEY=...
 
 Requirements: Python 3.11+. Tested on macOS and Linux.
 
-**Deploy in one click:** the repo includes a [`render.yaml`](render.yaml) blueprint — on [Render](https://render.com) choose *New → Blueprint*, pick this repo, and it's live on a free instance in a few minutes (add `ANTHROPIC_API_KEY` in the dashboard for live extraction). A `Procfile` is included for Railway / Heroku-style hosts.
+**Hosted demo:** https://web-production-4653b.up.railway.app — deployed on [Railway](https://railway.app) straight from this repo (the `Procfile` is all it needs). A [`render.yaml`](render.yaml) blueprint is included too. Add `ANTHROPIC_API_KEY` as an environment variable on the host to enable live extraction; without it the app runs in offline-fixture mode.
 
 ## How it works
 
@@ -161,7 +164,7 @@ python -m eval.run_eval --offline    # rules + gate + tracker, no network, ~1 s
 python -m eval.run_eval              # live Claude extraction (~1 min)
 ```
 
-Results at **http://localhost:8000/eval** and in `eval/results-{offline,live}.json`.
+Results at **http://localhost:8000/eval** (or [the hosted one](https://web-production-4653b.up.railway.app/eval)) and in `eval/results-{offline,live}.json`.
 
 | Run | Passed | Escalation cases | Escalations auto-actioned |
 |-----|--------|------------------|---------------------------|

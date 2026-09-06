@@ -95,18 +95,19 @@ async function load() {
   try {
     const m = await (await fetch('/api/meta')).json();
     if (m.llm !== 'claude') {
-      $('btnLive').disabled = true; $('btnLive').title = 'Set ANTHROPIC_API_KEY on the server to enable live extraction';
+      LIVE_AVAILABLE = false; $('btnLive').disabled = true; $('btnLive').title = 'Set ANTHROPIC_API_KEY on the server to enable live extraction';
       $('btnLive').textContent = 'Live extraction unavailable'; $('noKey').hidden = false;
     }
   } catch (e) {}
   const r = await fetch('/api/eval/results'); render(await r.json());
 }
+let LIVE_AVAILABLE = true;
 async function run(offline) {
   $('btnOff').disabled = $('btnLive').disabled = true;
   $('out').innerHTML = `<div class="card">Running ${offline ? 'offline' : 'with live extraction (≈1 min for 15 calls)'}…</div>`;
   try { const r = await fetch('/api/eval/run?offline=' + offline, {method: 'POST'}); render(await r.json()); }
   catch (e) { $('out').innerHTML = `<div class="card bad">Run failed: ${esc(e.message)}</div>`; }
-  $('btnOff').disabled = $('btnLive').disabled = false;
+  $('btnOff').disabled = false; $('btnLive').disabled = !LIVE_AVAILABLE;
 }
 function render(data) {
   const s = data.summary;

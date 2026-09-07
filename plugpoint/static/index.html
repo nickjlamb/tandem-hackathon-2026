@@ -320,13 +320,14 @@
       <li><span class="num">1</span><div><b>Extract</b><span>AI identifies investigations and follow-up from the clinic note.</span></div></li>
       <li><span class="num">2</span><div><b>Check</b><span>Deterministic rules verify that the plan is complete and internally consistent.</span></div></li>
       <li><span class="num">3</span><div><b>Approve</b><span>A clinician reviews and approves the plan before anything is actioned.</span></div></li>
-      <li><span class="num">4</span><div><b>Track</b><span>PlugPoint monitors outstanding results and follow-up until the loop is closed.</span></div></li>
+      <li><span class="num">4</span><div><b>Track</b><span>PlugPoint monitors outstanding results and follow-up until the loop is closed. The clinic worklist ranks every open loop by risk, and an alert nobody actions for five days escalates — requesting clinician → clinic consultant → service lead.</span></div></li>
     </ol>
     <h3>FAQs</h3>
     <div class="faq">
       <details><summary>Does PlugPoint make clinical decisions?</summary><div class="a">No. Clinical decisions remain with the clinician. PlugPoint extracts, checks, executes and tracks the documented plan.</div></details>
       <details><summary>Does it automatically order tests?</summary><div class="a">Only after clinician approval. In this demo, downstream EPR, ordering, booking and messaging systems are simulated.</div></details>
-      <details><summary>What happens if a result doesn’t arrive?</summary><div class="a">The tracker identifies overdue actions and can escalate them rather than allowing the follow-up loop to disappear.</div></details>
+      <details><summary>What happens if a result doesn’t arrive?</summary><div class="a">The tracker flags it as overdue and alerts the requesting clinician. If nobody actions the alert within five days it escalates to the clinic consultant, and after another five to the service lead, so a loop cannot disappear because one person was away.</div></details>
+      <details><summary>What is the clinic worklist for?</summary><div class="a">One board for the whole clinic: every open loop ranked by risk — appointment imminent with results outstanding, overdue, on hold, not closed, on track — with its owner, age and the same actions as the tracker. It is the Monday-morning view rather than the per-patient one.</div></details>
       <details><summary>Is the AI trusted to get everything right?</summary><div class="a">No. AI handles language extraction. Deterministic checks and clinician approval provide separate safeguards before actions are executed.</div></details>
     </div>
     <h3>Demo mode</h3>

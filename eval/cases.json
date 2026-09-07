@@ -405,7 +405,7 @@
           "name": "Dr Sam Patel",
           "role": "registrar"
         },
-        "note": "Respiratory clinic. 64M, cough 8 weeks, possible RUL opacity on CXR. Plan: CT chest with contrast. See in clinic in 2 weeks to discuss. Bloods today: FBC, CRP.\n\nAddendum: for follow-up, review in 3 months with the CT result.",
+        "note": "Respiratory clinic. 64M, cough 8 weeks, possible RUL opacity on CXR. Plan: CT chest with contrast. See in clinic in 2 weeks to discuss. Bloods today: FBC and CRP to look for infection or inflammation.\n\nAddendum: for follow-up, review in 3 months with the CT result.",
         "mock_plan": {
           "investigations": [
             {

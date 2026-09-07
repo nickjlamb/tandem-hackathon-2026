@@ -3,14 +3,14 @@
     "mode": "claude",
     "model": "claude-sonnet-4-5",
     "run_at": "2026-09-07",
-    "seconds": 70.7,
+    "seconds": 72.6,
     "total": 17,
-    "passed": 17,
-    "failed": 0,
-    "pass_pct": 100,
+    "passed": 15,
+    "failed": 2,
+    "pass_pct": 88,
     "escalation_total": 5,
-    "escalation_passed": 5,
-    "escalation_failed": 0,
+    "escalation_passed": 4,
+    "escalation_failed": 1,
     "escalations_missed": 0,
     "by_type": {
       "routine": {
@@ -19,11 +19,11 @@
       },
       "edge": {
         "total": 4,
-        "passed": 4
+        "passed": 3
       },
       "ambiguous": {
         "total": 2,
-        "passed": 2
+        "passed": 1
       },
       "escalation": {
         "total": 6,
@@ -315,19 +315,21 @@
       "type": "edge",
       "title": "Investigations but no follow-up (results to GP)",
       "source": "llm",
-      "passed": true,
+      "passed": false,
       "checks": [
         {
           "name": "requires_human_review",
           "expected": false,
-          "actual": false,
-          "ok": true
+          "actual": true,
+          "ok": false
         },
         {
           "name": "escalation_reasons",
           "expected": [],
-          "actual": [],
-          "ok": true
+          "actual": [
+            "missing_follow_up_interval"
+          ],
+          "ok": false
         },
         {
           "name": "investigations_extracted",
@@ -344,14 +346,14 @@
         {
           "name": "flag:no_follow_up",
           "expected": true,
-          "actual": true,
-          "ok": true
+          "actual": false,
+          "ok": false
         },
         {
           "name": "orders_placed",
           "expected": 1,
-          "actual": 1,
-          "ok": true
+          "actual": 0,
+          "ok": false
         },
         {
           "name": "appointment_booked",
@@ -366,10 +368,16 @@
           "ok": true
         },
         {
+          "name": "no_actions_on_escalation",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
           "name": "loop_status",
           "expected": "open",
-          "actual": "open",
-          "ok": true
+          "actual": "needs_review",
+          "ok": false
         }
       ],
       "notes": [],
@@ -585,7 +593,7 @@
       "type": "ambiguous",
       "title": "Conflicting follow-up intervals in note (2 wk vs 3 months)",
       "source": "llm",
-      "passed": true,
+      "passed": false,
       "checks": [
         {
           "name": "requires_human_review",
@@ -599,9 +607,10 @@
             "conflicting_follow_up_interval"
           ],
           "actual": [
-            "conflicting_follow_up_interval"
+            "conflicting_follow_up_interval",
+            "missing_indication"
           ],
-          "ok": true
+          "ok": false
         },
         {
           "name": "investigations_extracted",

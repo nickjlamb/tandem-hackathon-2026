@@ -6,8 +6,10 @@ All notable changes to PlugPoint are documented here. The format follows
 
 ## [Unreleased]
 
-### Known issues
-- A note that explicitly says "no follow-up needed" can be extracted as a follow-up with no interval, which the rules then escalate. Found by the live gold run; fix pending a one-line clarification of the extraction prompt.
+### Fixed
+- Extraction prompt: a note that explicitly says no clinic follow-up is needed now yields `follow_up: null` instead of a follow-up with no interval (found by the live gold run, confirmed on re-run: 17/17 live).
+- Gold case G09 note now states an indication for the bloods it lists.
+- Eval runner records an extraction error as a failed case instead of crashing the summary.
 
 ## [0.1.0] — 2026-09-05
 

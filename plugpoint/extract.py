@@ -28,6 +28,8 @@ Rules:
   converted to weeks (months x 4, days / 7, round to nearest whole week). If exactly one distinct
   value is mentioned, also set interval_weeks to it. If two or more different values are mentioned,
   leave interval_weeks null.
+- If the note explicitly says no clinic follow-up is needed (e.g. discharge, results to GP by letter),
+  set follow_up to null. Do not create a follow_up object with no interval in that case.
 - reviewer_role: 'consultant' or 'registrar' only if the note explicitly says who should see the
   patient next; otherwise null.
 - evidence: short verbatim quotes from the note.

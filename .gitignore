@@ -97,3 +97,6 @@ _to_delete/
 
 # ── Office lock files ─────────────────────────────────
 ~$*
+
+# standalone presentation assets kept out of the repo
+/PlugPoint_evidence_*.pptx

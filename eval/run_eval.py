@@ -52,6 +52,7 @@ def run_case(case: dict) -> dict:
         plan, source = extract_action_plan(inp["note"], None, fallback_plan=fallback)
     except Exception as e:  # extraction failure is a failed case, not a crash
         return {"id": case["id"], "type": case["type"], "title": case["title"], "passed": False, "source": "error",
+                "expected_escalation": exp["requires_human_review"],
                 "checks": [{"name": "extraction", "expected": "plan", "actual": f"error: {e}", "ok": False}], "notes": []}
 
     loop = store.create_loop(inp["patient_id"], inp["note"], clinician, plan, source)

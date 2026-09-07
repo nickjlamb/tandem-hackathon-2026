@@ -19,10 +19,12 @@ Total / passed / failed / pass %; escalation cases passed; escalations missed (b
 ## Results so far
 | Run | Passed | Escalation cases | Escalations auto-actioned |
 |-----|--------|------------------|---------------------------|
-| Offline (rules + gate + tracker) | 15/15 | 5/5 | 0 |
-| Live extraction (first run) | 11/15 | 3/5 | 0 |
+| Offline (rules + gate + tracker + escalation) | 17/17 | 5/5 | 0 |
+| Live, 5 Sep, original 15 cases | 11/15 | 3/5 | 0 |
+| Live, 7 Sep, 17 cases, before fixes | 15/17 | 4/5 | 0 |
+| Live, 7 Sep, 17 cases, current | 17/17 | 5/5 | 0 |
 
-Live-run failures: G15 and G13 were case errors (note lacked the indication the stand-in assumed; bronchoscopy category ambiguous) and G09 an over-strict item count — all three fixed in the cases, not the workflow. G05 is a genuine extraction gap ("no follow-up needed" returned as a follow-up with no interval), recorded as a known issue.
+Live-run failures and what was done: G15, G13, G09 (twice) were case errors — notes that lacked the indication the stand-in assumed, or an ambiguous category — fixed in the cases. G05 was a genuine extraction gap: a note saying "no further follow-up needed; results to GP" was returned as a follow-up with no interval. Fixed with one sentence in the extraction prompt ("if the note explicitly says no clinic follow-up is needed, set follow_up to null"), which is a spec correction rather than tuning to pass, and confirmed by re-run.
 
 ## Rules for this eval
 The production workflow is never modified merely to make a case pass. A wrong case is fixed and the commit says so. Failures are reported as found.

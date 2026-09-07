@@ -15,8 +15,9 @@ from datetime import date, timedelta
 
 from .audit import AuditLog
 from .integrations import Integrations
-from .rules import (APPOINTMENT_LEAD_DAYS, CHECK_NAMES, RESULT_BUFFER_DAYS, check_plan, earliest_follow_up_date,
-                    expected_result_date, next_weekday, resolve_reviewer)
+from .fixtures import CONSULTANT_ROSTER, SERVICE_LEAD
+from .rules import (APPOINTMENT_LEAD_DAYS, CHECK_NAMES, ESCALATE_AFTER_DAYS, RESULT_BUFFER_DAYS, check_plan,
+                    earliest_follow_up_date, expected_result_date, next_weekday, resolve_reviewer)
 from .schema import ActionPlan, Clinician, GateResult
 
 # The eval pins this so weekday arithmetic is reproducible; the app starts from the real date.
@@ -283,6 +284,27 @@ class Store:
                 self._notify(loop, "appointment_passed",
                              message=f"Follow-up date {appt['date']} has passed - confirm patient was seen and results reviewed",
                              actions=["close"])
+        # C4 - second-line escalation: an alert nobody has actioned moves up a tier
+        for n in self.notifications:
+            if n["resolved"] or n["tier"] >= 2:
+                continue
+            since = date.fromisoformat(n["escalated_on"] or n["created"])
+            if (self.today - since).days >= ESCALATE_AFTER_DAYS:
+                self._escalate(n)
+
+    def _escalate(self, n: dict) -> None:
+        loop = self.loops[n["loop_id"]]
+        consultant = CONSULTANT_ROSTER.get(loop["patient"]["clinic"])
+        previous = n["owner"]
+        if n["tier"] == 0 and consultant and previous != consultant:
+            n["tier"], n["owner"] = 1, consultant
+        else:
+            n["tier"], n["owner"] = 2, f"{SERVICE_LEAD['name']} ({SERVICE_LEAD['role']})"
+        n["escalated_from"], n["escalated_on"] = previous, self.today.isoformat()
+        age = (self.today - date.fromisoformat(n["created"])).days
+        self.audit.record(self.today, "SYSTEM",
+                          f"ESCALATED (tier {n['tier']}): {n['kind'].replace('_', ' ')} for {loop['patient']['name']} "
+                          f"unactioned for {age} days - moved from {previous} to {n['owner']}", loop["id"])
 
     # ------------------------------------------------------ clinician actions
     def chase(self, loop_id: str, item_id: str, approver_name: str) -> dict:
@@ -343,8 +365,9 @@ class Store:
     def _notify(self, loop: dict, kind: str, message: str, actions: list[str], item_id: str | None = None) -> None:
         n = {"id": f"N{next(self._note_ids):03d}", "loop_id": loop["id"], "patient_name": loop["patient"]["name"],
              "kind": kind, "item_id": item_id, "message": message, "actions": actions,
-             "created": self.today.isoformat(), "resolved": False,
-             "owner": loop["appointment"]["reviewer_name"] if loop.get("appointment") else loop["clinician"]["name"]}
+             "created": self.today.isoformat(), "resolved": False, "tier": 0, "escalated_on": None, "escalated_from": None,
+             # the requesting clinician owns the loop's alerts; escalation moves them up the ladder
+             "owner": loop["clinician"]["name"]}
         self.notifications.append(n)
         self.audit.record(self.today, "SYSTEM", f"ALERT to {n['owner']}: {message}", loop["id"])
 
@@ -360,6 +383,50 @@ class Store:
             if item_id and n["item_id"] != item_id:
                 continue
             n["resolved"] = True
+
+    # ------------------------------------------------------------ worklist
+    def worklist(self) -> list[dict]:
+        """Every open loop ranked by risk, for the clinic-level board. Deterministic: score is a
+        fixed ladder (appointment imminent with results out > escalated > overdue > on hold >
+        appointment passed > on track), then age within a band."""
+        rows = []
+        for loop in self.loops.values():
+            if loop["status"] != "open":
+                continue
+            alerts = [n for n in self.notifications if n["loop_id"] == loop["id"] and not n["resolved"]]
+            outstanding = [i for i in loop["items"] if i["status"] == "result_awaited"]
+            overdue = [i for i in outstanding if i["overdue"]]
+            held = [i for i in outstanding if i["on_hold"]]
+            appt = loop["appointment"]
+            days_to_appt = (date.fromisoformat(appt["date"]) - self.today).days if appt else None
+            tier = max((n["tier"] for n in alerts), default=0)
+            # owner = whoever holds the highest-tier open alert, else the reviewer
+            owner = max(alerts, key=lambda n: n["tier"])["owner"] if alerts else loop["clinician"]["name"]
+            oldest = min((date.fromisoformat(n["created"]) for n in alerts), default=None)
+            age = (self.today - oldest).days if oldest else 0
+
+            if appt and days_to_appt is not None and 0 <= days_to_appt <= APPOINTMENT_LEAD_DAYS and outstanding:
+                score, band, why = 100, "imminent", f"Appointment in {days_to_appt} day{'s' if days_to_appt != 1 else ''}, {len(outstanding)} result{'s' if len(outstanding) != 1 else ''} outstanding"
+            elif overdue:
+                worst = max((self.today - date.fromisoformat(i["expected_by"])).days for i in overdue)
+                score, band, why = 80 + min(worst, 15), "overdue", f"{overdue[0]['name']} result {worst} day{'s' if worst != 1 else ''} overdue" + (f" (+{len(overdue) - 1} more)" if len(overdue) > 1 else "")
+            elif held:
+                score, band, why = 70, "on_hold", f"{held[0]['name']} on hold - {held[0]['hold_reason']}"
+            elif appt and days_to_appt is not None and days_to_appt < 0:
+                score, band, why = 40 + min(-days_to_appt, 15), "passed", f"Appointment {-days_to_appt} day{'s' if -days_to_appt != 1 else ''} ago, loop not closed"
+            elif outstanding:
+                score, band, why = 10, "on_track", f"{len(outstanding)} result{'s' if len(outstanding) != 1 else ''} awaited, on track"
+            else:
+                score, band, why = 5, "ready", "All results in - pre-clinic pack ready"
+            score += 20 * tier  # escalated loops float up within and across bands
+            rows.append({
+                "loop_id": loop["id"], "patient": loop["patient"], "score": score, "band": band, "why": why,
+                "owner": owner, "tier": tier, "age_days": age, "alerts": alerts,
+                "appointment": appt, "days_to_appt": days_to_appt,
+                "outstanding": [i["name"] for i in outstanding], "escalated_from": next((n["escalated_from"] for n in alerts if n["tier"] == tier and n["escalated_from"]), None),
+            })
+        rows.sort(key=lambda r: (-r["score"], -r["age_days"], r["patient"]["name"]))
+        return rows
 
     # ------------------------------------------------------------- snapshot
     def loop_counts(self, loop_id: str) -> dict:
@@ -379,7 +446,8 @@ class Store:
             "today": self.today.isoformat(),
             "loops": list(self.loops.values()),
             "notifications": [n for n in self.notifications if not n["resolved"]],
-            "audit": self.audit.entries[-200:],
+            "worklist": self.worklist(),
+            "audit": self.audit.entries[-300:],
         }
 
 

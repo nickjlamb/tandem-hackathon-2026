@@ -20,6 +20,10 @@ RESULT_BUFFER_DAYS = 2
 # Warn the clinician if results are still outstanding this close to the appointment.
 APPOINTMENT_LEAD_DAYS = 7
 
+# Second-line escalation: an alert nobody has actioned for this many days moves up a tier
+# (owner -> clinic consultant -> service lead). Demo value; production reads the trust's SOP.
+ESCALATE_AFTER_DAYS = 5
+
 # The five plan checks, in the order they run (shown in the UI and audit trail).
 CHECK_NAMES = ["indication stated", "single follow-up interval", "interval present",
                "appointment after results", "reviewer resolved"]

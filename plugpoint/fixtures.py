@@ -17,7 +17,19 @@ PATIENTS = {
              "phone": "07700 900003", "clinic": "Hepatology"},
     "P004": {"id": "P004", "name": "Tomasz Wójcik", "age": 71, "sex": "M", "hospital_no": "H-10004",
              "phone": "07700 900004", "clinic": "Respiratory"},
+    # additional synthetic patients used by the seeded clinic worklist
+    "P005": {"id": "P005", "name": "Grace Whitfield", "age": 66, "sex": "F", "hospital_no": "H-10005",
+             "phone": "07700 900005", "clinic": "Urology"},
+    "P006": {"id": "P006", "name": "Samuel Adeyemi", "age": 52, "sex": "M", "hospital_no": "H-10006",
+             "phone": "07700 900006", "clinic": "Respiratory"},
+    "P007": {"id": "P007", "name": "Mei Lin Zhou", "age": 39, "sex": "F", "hospital_no": "H-10007",
+             "phone": "07700 900007", "clinic": "Hepatology"},
+    "P008": {"id": "P008", "name": "Harold Bennett", "age": 74, "sex": "M", "hospital_no": "H-10008",
+             "phone": "07700 900008", "clinic": "Urology"},
 }
+
+# Second-line escalation target when a consultant has not actioned an alert either.
+SERVICE_LEAD = {"name": "Priya Menon", "role": "service lead"}
 
 CLINICIANS = [
     {"name": "Dr Sam Patel", "role": "registrar"},

@@ -73,6 +73,15 @@ def state():
     return STORE.snapshot()
 
 
+@app.post("/api/seed")
+def seed():
+    """Populate a synthetic clinic (6 backdated loops walked forward day by day) so the worklist has
+    something to rank. Adds to whatever is already there; Reset demo clears it."""
+    from .seed import seed_clinic
+    n = seed_clinic(STORE)
+    return {"seeded": n, "state": STORE.snapshot()}
+
+
 @app.post("/api/reset")
 def reset():
     STORE.reset()

@@ -1,14 +1,14 @@
 # Evaluation
 
 ## What is tested
-`eval/cases.json` holds 15 synthetic cases. Each stores the input (patient, note author, clinic note, and an offline extraction stand-in), the expected gate output (`requires_human_review`, reason codes, item count, follow-up weeks, reviewer, flags), the expected downstream actions (orders placed, appointment booked, patient messaged) and, for tracker cases, scripted events with the alerts expected at each point.
+`eval/cases.json` holds 17 synthetic cases. Each stores the input (patient, note author, clinic note, and an offline extraction stand-in), the expected gate output (`requires_human_review`, reason codes, item count, follow-up weeks, reviewer, flags), the expected downstream actions (orders placed, appointment booked, patient messaged) and, for tracker cases, scripted events with the alerts expected at each point.
 
 | Type | Cases | Behaviour |
 |------|-------|-----------|
 | routine | G01 G02 G03 G06 G15 | plan passes, actions fire, loop tracked and closed |
 | edge | G04 G05 G07 G08 | no investigations; no follow-up; biopsy timing; interval in days |
 | ambiguous | G09 G10 | conflicting intervals; follow-up without interval → escalate |
-| escalation | G11 G12 G13 G14 | missing indication; follow-up before results; both at once; scan on hold |
+| escalation | G11 G12 G13 G14 G16 G17 | missing indication; follow-up before results; both at once; scan on hold; unactioned alert escalates owner → consultant → service lead; actioned alert does not |
 
 ## How it runs
 `eval/run_eval.py` builds a fresh `Store` per case and calls the same `extract_action_plan`, `create_loop`, `approve`, `advance`, `receive_result`, `hold_investigation`, `resolve_hold` and `close` methods the API calls. Checks are exact comparisons; a case passes only if every check passes. The critical property is asserted separately for every escalation case: **no orders, booking or messages when the gate blocked**.

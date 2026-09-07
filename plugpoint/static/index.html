@@ -204,6 +204,34 @@
   .ev .s{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:5px;font-size:12px;color:var(--muted)}
   .demo{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-left:auto}
 
+  /* worklist */
+  .wide{padding:18px 24px 0}
+  @media (max-width:820px){.wide{padding:14px 14px 0}}
+  .wl table{font-size:13px}
+  .wl th:first-child{width:118px}
+  .band{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;border:1px solid transparent}
+  .band.imminent{background:var(--bad-soft);color:var(--bad);border-color:#f7c5c5}
+  .band.overdue{background:var(--bad-soft);color:var(--bad);border-color:#f7c5c5}
+  .band.on_hold{background:var(--ai-soft);color:var(--ai);border-color:#dccbfb}
+  .band.passed{background:var(--human-soft);color:var(--human);border-color:#f6dfb0}
+  .band.on_track{background:var(--api-soft);color:var(--api);border-color:#c9d9f8}
+  .band.ready{background:var(--rule-soft);color:var(--ok);border-color:#bfe8d6}
+  .tier{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:var(--human-soft);color:var(--human)}
+  .tier.t2{background:var(--bad-soft);color:var(--bad)}
+  .wl tr.sel td{background:var(--accent-soft)}
+  .wl tr{cursor:pointer}
+  .wl td.acts{white-space:normal}
+  .wl .row{gap:6px}
+  .wlchip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 10px;border-radius:999px;background:var(--soft);border:1px solid var(--line);color:var(--muted)}
+  .wlchip b{color:var(--ink)}
+  @media (max-width:820px){
+    .wl tr{grid-template-columns:auto 1fr}
+    .wl td:nth-child(1){grid-column:1;grid-row:1}
+    .wl td:nth-child(2){grid-column:2;grid-row:1}
+    .wl td:nth-child(n+3){grid-column:1/-1}
+    .wl td.acts{text-align:left}
+  }
+
   /* audit */
   .audit-h{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
   .audit-h h2{margin:0;font-size:17px;letter-spacing:-.2px;display:flex;align-items:center;gap:10px}
@@ -346,6 +374,20 @@
   </section>
 </main>
 
+<div class="wide">
+  <section class="card" id="worklistCard">
+    <div class="card-h">
+      <span class="num">4</span>
+      <div><h2>Clinic worklist<span>every open loop, ranked by risk</span></h2><small id="wlSub">Alerts nobody actions escalate: owner → clinic consultant → service lead</small></div>
+      <div class="spacer"></div>
+      <span class="hint" style="margin-right:2px">demo</span>
+      <button class="small" onclick="seedClinic()" id="seedBtn">Seed clinic (6 patients)</button>
+    </div>
+    <div id="wlChips" class="row" style="margin-bottom:10px"></div>
+    <div class="tbl wl" id="worklist"><div class="empty">No open loops. Approve a plan, or seed a synthetic clinic to see the board.</div></div>
+  </section>
+</div>
+
 <footer>
   <section class="card">
     <div class="audit-h">
@@ -453,13 +495,13 @@ async function action(kind, loopId, extra = {}) {
 }
 
 function revealCard(n) {
-  if (window.matchMedia('(max-width: 820px)').matches) {
-    const card = document.querySelectorAll('main > section.card')[n - 1];
+  if (window.matchMedia('(max-width: 820px)').matches || n === 4) {
+    const card = n === 4 ? $('worklistCard') : document.querySelectorAll('main > section.card')[n - 1];
     const top = card.getBoundingClientRect().top + window.scrollY - (document.querySelector('header').offsetHeight + 10);
     window.scrollTo({top, behavior: 'smooth'});
   }
 }
-function render() { $('today').innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg> <span class="lbl">Today:&nbsp;</span>${fmt(STATE.today)}`; renderPlan(); renderTracker(); renderAudit(); }
+function render() { $('today').innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg> <span class="lbl">Today:&nbsp;</span>${fmt(STATE.today)}`; renderPlan(); renderTracker(); renderWorklist(); renderAudit(); }
 
 /* ------------------------------------------------------------ plan */
 function loopStatus(loop) {
@@ -577,24 +619,57 @@ function renderTracker() {
       <div class="tl">${items}${fuEv}</div>${closeBtn}</div>`;
   }).join('');
 }
+function alertButtons(n) {
+  const defaultDate = (() => { const d = new Date(STATE.today + 'T00:00:00'); d.setDate(d.getDate() + 14); return d.toISOString().slice(0, 10); })();
+  return n.actions.map(a => {
+      if (a === 'chase') return `<button class="small" onclick="event.stopPropagation();action('chase','${n.loop_id}',{item_id:'${n.item_id}'})">Chase department</button>`;
+      if (a === 'acknowledge') return `<button class="small ghost" onclick="event.stopPropagation();action('acknowledge','${n.loop_id}',{notification_id:'${n.id}'})">Acknowledge</button>`;
+      if (a === 'keep') return `<button class="small ghost" onclick="event.stopPropagation();action('keep','${n.loop_id}')">Keep appointment</button>`;
+      if (a === 'close') return `<button class="small" onclick="event.stopPropagation();action('close','${n.loop_id}')">Seen &amp; reviewed — close loop</button>`;
+      if (a === 'rebook') return `<span class="row" style="gap:6px"><span class="hint">results expected by</span><input type="date" id="rb-${n.id}" value="${defaultDate}" style="width:auto;padding:4px 8px;font-size:12px" onclick="event.stopPropagation()"><button class="small" onclick="event.stopPropagation();action('rebook','${n.loop_id}',{results_expected: document.getElementById('rb-${n.id}').value})">Rebook after results</button></span>`;
+      if (a === 'resolve_hold') return `<span class="row" style="gap:6px"><span class="hint">agreed with department — expected by</span><input type="date" id="rh-${n.id}" value="${defaultDate}" style="width:auto;padding:4px 8px;font-size:12px" onclick="event.stopPropagation()"><button class="small" onclick="event.stopPropagation();action('resolve_hold','${n.loop_id}',{item_id:'${n.item_id}', results_expected: document.getElementById('rh-${n.id}').value})">Hold resolved</button></span>`;
+      return '';
+    }).join(' ');
+}
+function tierChip(n) {
+  if (!n.tier) return '';
+  return `<span class="tier ${n.tier === 2 ? 't2' : ''}" title="Unactioned for ${ESCALATE_DAYS}+ days, escalated from ${esc(n.escalated_from || '')}">↑ tier ${n.tier}${n.escalated_from ? ' · from ' + esc(n.escalated_from.split(' ').slice(-1)[0]) : ''}</span>`;
+}
+const ESCALATE_DAYS = 5;
+async function seedClinic() {
+  $('seedBtn').disabled = true; $('seedBtn').textContent = 'Seeding…';
+  try { const r = await api('/api/seed', {}); STATE = r.state; render(); revealCard(4); }
+  catch (e) { alert(e.message); }
+  $('seedBtn').disabled = false; $('seedBtn').textContent = 'Seed clinic (6 patients)';
+}
+function renderWorklist() {
+  const rows = STATE.worklist || [];
+  if (!rows.length) { $('worklist').innerHTML = '<div class="empty">No open loops. Approve a plan, or seed a synthetic clinic to see the board.</div>'; $('wlChips').innerHTML = ''; return; }
+  const esc1 = rows.filter(r => r.tier >= 1).length, imm = rows.filter(r => r.band === 'imminent').length, risky = rows.filter(r => r.score >= 40).length;
+  $('wlChips').innerHTML = `<span class="wlchip"><b>${rows.length}</b> open loop${rows.length === 1 ? '' : 's'}</span><span class="wlchip"><b style="color:${risky ? 'var(--bad)' : 'inherit'}">${risky}</b> need action</span><span class="wlchip"><b style="color:${imm ? 'var(--bad)' : 'inherit'}">${imm}</b> appointment imminent</span><span class="wlchip"><b style="color:${esc1 ? 'var(--human)' : 'inherit'}">${esc1}</b> escalated</span>`;
+  const bandLabel = {imminent: 'Appointment imminent', overdue: 'Result overdue', on_hold: 'On hold', passed: 'Not closed', on_track: 'On track', ready: 'Pack ready'};
+  $('worklist').innerHTML = `<table><thead><tr><th>Risk</th><th>Patient</th><th>Why</th><th>Owner</th><th>Age</th><th>Appointment</th><th>Actions</th></tr></thead><tbody>${rows.map((r, i) => {
+    const appt = r.appointment;
+    const acts = r.alerts.map(n => alertButtons(n)).join(' ');
+    return `<tr class="${r.loop_id === ACTIVE_LOOP ? 'sel' : ''}" onclick="ACTIVE_LOOP='${r.loop_id}';render();revealCard(2)">
+      <td><span class="band ${r.band}">${i + 1} · ${bandLabel[r.band]}</span></td>
+      <td><b>${esc(r.patient.name)}</b><br><span class="muted" style="font-size:12px">${r.patient.age}${r.patient.sex} · ${r.patient.clinic} · ${r.loop_id}</span></td>
+      <td>${esc(r.why)}${r.outstanding.length && r.band !== 'overdue' && r.band !== 'on_hold' ? `<br><span class="muted" style="font-size:12px">awaiting: ${esc(r.outstanding.join(', '))}</span>` : ''}</td>
+      <td><b>${esc(r.owner)}</b>${r.tier ? '<br>' + tierChip(r.alerts.find(n => n.tier === r.tier)) : ''}</td>
+      <td class="muted">${r.age_days ? r.age_days + ' d' : '—'}</td>
+      <td>${appt ? `${fmt(appt.date)}<br>${pill(appt.status)}` : '<span class="muted">not booked</span>'}</td>
+      <td class="acts">${acts || '<span class="muted">—</span>'}</td>
+    </tr>`;
+  }).join('')}</tbody></table>`;
+}
 function renderAlerts() {
   const ns = STATE.notifications;
   if (!ns.length) { $('alerts').innerHTML = ''; return; }
-  const defaultDate = (() => { const d = new Date(STATE.today + 'T00:00:00'); d.setDate(d.getDate() + 14); return d.toISOString().slice(0, 10); })();
   $('alerts').innerHTML = ns.map(n => {
-    const btns = n.actions.map(a => {
-      if (a === 'chase') return `<button class="small" onclick="action('chase','${n.loop_id}',{item_id:'${n.item_id}'})">Chase department</button>`;
-      if (a === 'acknowledge') return `<button class="small ghost" onclick="action('acknowledge','${n.loop_id}',{notification_id:'${n.id}'})">Acknowledge</button>`;
-      if (a === 'keep') return `<button class="small ghost" onclick="action('keep','${n.loop_id}')">Keep appointment</button>`;
-      if (a === 'close') return `<button class="small" onclick="action('close','${n.loop_id}')">Seen &amp; reviewed — close loop</button>`;
-      if (a === 'rebook') return `<span class="row" style="gap:6px"><span class="hint">results expected by</span><input type="date" id="rb-${n.id}" value="${defaultDate}" style="width:auto;padding:4px 8px;font-size:12px"><button class="small" onclick="action('rebook','${n.loop_id}',{results_expected: document.getElementById('rb-${n.id}').value})">Rebook after results</button></span>`;
-      if (a === 'resolve_hold') return `<span class="row" style="gap:6px"><span class="hint">agreed with department — expected by</span><input type="date" id="rh-${n.id}" value="${defaultDate}" style="width:auto;padding:4px 8px;font-size:12px"><button class="small" onclick="action('resolve_hold','${n.loop_id}',{item_id:'${n.item_id}', results_expected: document.getElementById('rh-${n.id}').value})">Hold resolved</button></span>`;
-      return '';
-    }).join(' ');
-    return `<div class="alert ${n.kind}"><div class="k">Alert · ${nice(n.kind)} · owner ${esc(n.owner)}</div><div class="m"><b>${esc(n.patient_name)}</b>: ${esc(n.message)}</div><div class="row">${btns}</div></div>`;
+    const btns = alertButtons(n);
+    return `<div class="alert ${n.kind}"><div class="k">Alert · ${nice(n.kind)} · owner ${esc(n.owner)} ${tierChip(n)}</div><div class="m"><b>${esc(n.patient_name)}</b>: ${esc(n.message)}</div><div class="row">${btns}</div></div>`;
   }).join('');
 }
-
 /* ----------------------------------------------------------- audit */
 function toggleAudit() {
   const body = $('auditBody'), hidden = !body.hidden; body.hidden = hidden;

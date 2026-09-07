@@ -107,8 +107,18 @@ def run_case(case: dict) -> dict:
                 store.rebook(loop["id"], store.today + timedelta(days=step["rebook"]), "Eval clinician")
             elif "close" in step:
                 store.close(loop["id"], "Eval clinician")
+            elif "chase" in step:
+                item = next(i for i in loop["items"] if i["category"] == step["chase"] and i["status"] == "result_awaited")
+                store.chase(loop["id"], item["id"], "Eval clinician")
             elif "expect_alerts" in step:
                 check(f"alerts@{store.today.isoformat()}", sorted(step["expect_alerts"]), _open_alert_kinds(store))
+            elif "expect_alert" in step:
+                want = step["expect_alert"]
+                n = next((n for n in store.notifications if n["loop_id"] == loop["id"] and n["kind"] == want["kind"] and not n["resolved"]), None)
+                check(f"alert_tier@{store.today.isoformat()}", want["tier"], n["tier"] if n else None)
+                check(f"alert_owner@{store.today.isoformat()}", want["owner"], n["owner"] if n else None)
+            elif "expect_no_escalation" in step:
+                check("no_escalation", 0, sum(1 for n in store.notifications if n["loop_id"] == loop["id"] and n["tier"] > 0))
         except Exception as e:
             checks.append({"name": f"step {step}", "expected": "ok", "actual": f"error: {e}", "ok": False})
     if "alerts" in exp:

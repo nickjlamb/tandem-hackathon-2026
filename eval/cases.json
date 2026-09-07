@@ -796,6 +796,164 @@
           "reviewed"
         ]
       }
+    },
+    {
+      "id": "G16",
+      "type": "escalation",
+      "title": "Alert nobody actions escalates: owner -> consultant after 5 days -> service lead after 10",
+      "input": {
+        "patient_id": "P003",
+        "clinician": {
+          "name": "Dr Sam Patel",
+          "role": "registrar"
+        },
+        "note": "Hepatology clinic. 45F NAFLD. Plan: repeat LFTs to monitor liver function. Review in 4 weeks with the consultant.",
+        "mock_plan": {
+          "investigations": [
+            {
+              "name": "LFTs",
+              "category": "bloods",
+              "reason": "Monitor liver function in NAFLD",
+              "urgency": "routine",
+              "evidence": "LFTs"
+            }
+          ],
+          "follow_up": {
+            "interval_weeks": 4,
+            "interval_candidates_weeks": [
+              4
+            ],
+            "reviewer_role": "consultant",
+            "purpose": "Review results",
+            "evidence": "Follow up in 4 weeks"
+          },
+          "ambiguities": []
+        }
+      },
+      "steps": [
+        {
+          "advance_days": 4
+        },
+        {
+          "expect_alerts": [
+            "result_overdue"
+          ]
+        },
+        {
+          "expect_alert": {
+            "kind": "result_overdue",
+            "tier": 0,
+            "owner": "Dr Sam Patel"
+          }
+        },
+        {
+          "advance_days": 5
+        },
+        {
+          "expect_alert": {
+            "kind": "result_overdue",
+            "tier": 1,
+            "owner": "Dr Elena Fischer"
+          }
+        },
+        {
+          "advance_days": 5
+        },
+        {
+          "expect_alert": {
+            "kind": "result_overdue",
+            "tier": 2,
+            "owner": "Priya Menon (service lead)"
+          }
+        }
+      ],
+      "expected": {
+        "requires_human_review": false,
+        "reasons": [],
+        "investigations": 1,
+        "follow_up_weeks": 4,
+        "reviewer_role": "consultant",
+        "actions": {
+          "orders": 1,
+          "appointment_booked": true,
+          "patient_messaged": true
+        },
+        "loop_status": "open"
+      }
+    },
+    {
+      "id": "G17",
+      "type": "escalation",
+      "title": "Alert actioned in time does not escalate",
+      "input": {
+        "patient_id": "P003",
+        "clinician": {
+          "name": "Dr Sam Patel",
+          "role": "registrar"
+        },
+        "note": "Hepatology clinic. 45F NAFLD. Plan: repeat LFTs to monitor liver function. Review in 4 weeks with the consultant.",
+        "mock_plan": {
+          "investigations": [
+            {
+              "name": "LFTs",
+              "category": "bloods",
+              "reason": "Monitor liver function in NAFLD",
+              "urgency": "routine",
+              "evidence": "LFTs"
+            }
+          ],
+          "follow_up": {
+            "interval_weeks": 4,
+            "interval_candidates_weeks": [
+              4
+            ],
+            "reviewer_role": "consultant",
+            "purpose": "Review results",
+            "evidence": "Follow up in 4 weeks"
+          },
+          "ambiguities": []
+        }
+      },
+      "steps": [
+        {
+          "advance_days": 4
+        },
+        {
+          "expect_alert": {
+            "kind": "result_overdue",
+            "tier": 0,
+            "owner": "Dr Sam Patel"
+          }
+        },
+        {
+          "chase": "bloods"
+        },
+        {
+          "expect_alerts": []
+        },
+        {
+          "advance_days": 5
+        },
+        {
+          "expect_alerts": []
+        },
+        {
+          "expect_no_escalation": true
+        }
+      ],
+      "expected": {
+        "requires_human_review": false,
+        "reasons": [],
+        "investigations": 1,
+        "follow_up_weeks": 4,
+        "reviewer_role": "consultant",
+        "actions": {
+          "orders": 1,
+          "appointment_booked": true,
+          "patient_messaged": true
+        },
+        "loop_status": "open"
+      }
     }
   ]
 }

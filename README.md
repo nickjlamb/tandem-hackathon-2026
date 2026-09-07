@@ -36,6 +36,7 @@ After an outpatient consultation the clinician has a plan in their head: *order 
 | **Approve** | Clinician | One click. The plan is editable; nothing is ordered or booked before approval. Ambiguous plans stop here — **the system never guesses**. |
 | **Act** | Integrations (mocked) | Orders sent, follow-up booked with the right clinician, patient messaged, EPR updated. |
 | **Track** | Deterministic | Every item has an expected-by date. Overdue results, appointments at risk and investigations put on hold raise an alert to a **named owner** with chase / rebook / hold-resolved actions. |
+| **Worklist** | Deterministic | Every open loop across the clinic, ranked by risk. An alert nobody actions for 5 days **escalates** — owner → clinic consultant → service lead — so a loop cannot die because one person was on leave. |
 | **Audit** | — | Every event labelled `AI` · `RULE` · `HUMAN` · `API` · `SYSTEM`. |
 
 > **Design principle:** automate the admin, keep clinical judgement visible. Routine cases flow; exceptions go to humans. Don't just generate text — complete work. Don't just demonstrate it — test it.
@@ -112,6 +113,7 @@ Item:  proposed ─► result_awaited ─► result_received ─► reviewed
                         ├─ overdue   (today > expected_by)          → alert: chase
                         └─ on_hold   (department vetting query)     → alert: resolve hold
 Appointment:  booked ─► at_risk (results not expected in time)      → alert: rebook / keep
+Alert:        tier 0 (requesting clinician) ─5 d─► tier 1 (clinic consultant) ─5 d─► tier 2 (service lead)
 ```
 
 ## Architecture
@@ -121,7 +123,8 @@ plugpoint/
 ├── schema.py        Pydantic contracts: ActionPlan, Investigation, FollowUp, GateResult …
 ├── extract.py       the ONE LLM call (forced tool use → ActionPlan); offline fixtures fallback   [AI]
 ├── rules.py         5 plan checks, turnaround table, reviewer rule, earliest-date maths         [RULE]
-├── tracker.py       Store: loops, items, approval, events, safety-net checks, simulated clock    [SYSTEM]
+├── tracker.py       Store: loops, items, approval, events, safety-net checks, escalation, worklist [SYSTEM]
+├── seed.py          synthetic clinic (6 backdated loops walked forward day by day) for the worklist
 ├── integrations.py  MockEPR · MockOrderComms · MockScheduling · MockPatientMessaging            [API]
 ├── audit.py         append-only trail with actor labels
 ├── fixtures.py      synthetic patients, clinicians, sample notes, offline extraction stand-ins
@@ -129,7 +132,7 @@ plugpoint/
 ├── cli.py           terminal run of the happy path
 └── static/          index.html (workflow UI) · eval.html (gold-set results)
 eval/
-├── cases.json       15 gold cases: input, expected gate output, escalation status, downstream actions
+├── cases.json       17 gold cases: input, expected gate output, escalation status, downstream actions
 ├── run_eval.py      runs cases through the same Store/rules/extract code as the app
 └── results*.json    latest offline and live runs
 docs/                strategy · problem · architecture · evaluation notes
@@ -149,14 +152,20 @@ Sample A → **Extract action plan** → 5/5 checks → **Approve & action plan*
 
 Sample B's note says "see in 2 weeks" and, later, "review in 3 months". Nothing is ordered or booked; the clinician chooses. Sample C has a biopsy with no indication (type one, or untick it). Sample D books follow-up before a biopsy can be back — the rule suggests the earliest workable interval, and checks the clinician's answer too.
 
-### 3 · Terminal
+### 3 · The clinic worklist
+
+<img src="docs/images/worklist.png" alt="Clinic worklist: every open loop ranked by risk, with owner and escalation tier" width="920">
+
+Click **Seed clinic (6 patients)** and the board fills with a synthetic clinic that was walked forward day by day through the same rules: an appointment in two days with the MRI still missing sits at the top, escalated to the service lead; a CT on hold and a set of bloods a week late have climbed to the consultant; one loop is on track; one is ready. Press **+1 week** and watch it re-sort. Every row's actions are the same chase / rebook / resolve / close actions as the tracker.
+
+### 4 · Terminal
 
 ```bash
 python -m plugpoint.cli              # happy path, prints the audit trail
 python -m plugpoint.cli B_conflict   # escalation
 ```
 
-### 4 · API
+### 5 · API
 
 ```bash
 curl -s -X POST localhost:8000/api/plan -H 'Content-Type: application/json' -d '{
@@ -171,7 +180,7 @@ curl -s -X POST localhost:8000/api/approve -H 'Content-Type: application/json' \
 curl -s -X POST 'localhost:8000/api/simulate/advance?days=35' | jq '.notifications[] | {kind, owner, actions}'
 ```
 
-### 5 · Structured output the workflow runs on
+### 6 · Structured output the workflow runs on
 
 ```json
 {
@@ -190,7 +199,7 @@ curl -s -X POST 'localhost:8000/api/simulate/advance?days=35' | jq '.notificatio
 
 <img src="docs/images/eval.png" alt="Gold evaluation results page" width="920">
 
-Fifteen synthetic gold cases — routine, edge, ambiguous/conflicting and must-escalate — each storing the note, the expected gate output, the expected escalation status and the expected downstream actions, plus scripted tracker events (results arriving, weeks passing, a scan put on hold, an appointment passing). They run through the **same** `Store`, rules and extraction code as the app and are compared field by field. The workflow is never tuned to pass; failures are reported as found.
+Seventeen synthetic gold cases — routine, edge, ambiguous/conflicting, must-escalate and second-line escalation — each storing the note, the expected gate output, the expected escalation status and the expected downstream actions, plus scripted tracker events (results arriving, weeks passing, a scan put on hold, an appointment passing). They run through the **same** `Store`, rules and extraction code as the app and are compared field by field. The workflow is never tuned to pass; failures are reported as found.
 
 ```bash
 python -m eval.run_eval --offline    # rules + gate + tracker, no network, ~1 s
@@ -201,7 +210,7 @@ Results at **http://localhost:8000/eval** and in `eval/results-{offline,live}.js
 
 | Run | Passed | Escalation cases | Escalations auto-actioned |
 |-----|--------|------------------|---------------------------|
-| Offline (rules + tracker) | 15 / 15 | 5 / 5 | **0** |
+| Offline (rules + tracker), 17 cases | 17 / 17 | 5 / 5 | **0** |
 | Live extraction, first run | 11 / 15 | 3 / 5 | **0** |
 
 The first live run was useful: three failures were errors in our own cases (fixed — [`d3fbc04`](https://github.com/nickjlamb/tandem-hackathon-2026/commit/d3fbc04)), one was a real gap in the extraction spec (a note saying "no follow-up needed" was returned as a follow-up with no interval). The property that matters held in both runs: **nothing that should stop for a clinician was auto-actioned.**
@@ -219,6 +228,7 @@ The first live run was useful: three failures were errors in our own cases (fixe
 - [ ] **Persistence** — swap the in-memory `Store` for Postgres; multi-user with clinic-level dashboards.
 - [ ] **Turnaround table from the department**, not a constant; per-modality SLAs and urgent pathways.
 - [ ] **Abnormal / urgent result routing** — a result that needs action *before* the booked appointment.
+- [x] **Clinic worklist with second-line escalation** — every open loop ranked by risk; unactioned alerts move owner → consultant → service lead.
 - [ ] **DNA handling** — patient did not attend: loop stays open, re-book flow.
 - [ ] **Extraction hardening** — explicit "no follow-up" handling, larger gold set with clinician-authored cases, measurement across models.
 - [ ] **Clinical safety case** (DCB0129/0160) and information-governance review before any pilot.

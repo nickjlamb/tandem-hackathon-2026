@@ -2,10 +2,10 @@
   "summary": {
     "mode": "offline fixtures",
     "model": null,
-    "run_at": "2026-09-05",
+    "run_at": "2026-09-07",
     "seconds": 0.0,
-    "total": 15,
-    "passed": 15,
+    "total": 17,
+    "passed": 17,
     "failed": 0,
     "pass_pct": 100,
     "escalation_total": 5,
@@ -26,8 +26,8 @@
         "passed": 2
       },
       "escalation": {
-        "total": 4,
-        "passed": 4
+        "total": 6,
+        "passed": 6
       }
     }
   },
@@ -1069,6 +1069,212 @@
           "actual": [
             "reviewed"
           ],
+          "ok": true
+        }
+      ],
+      "notes": [],
+      "expected_escalation": false
+    },
+    {
+      "id": "G16",
+      "type": "escalation",
+      "title": "Alert nobody actions escalates: owner -> consultant after 5 days -> service lead after 10",
+      "source": "mock",
+      "passed": true,
+      "checks": [
+        {
+          "name": "requires_human_review",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "escalation_reasons",
+          "expected": [],
+          "actual": [],
+          "ok": true
+        },
+        {
+          "name": "investigations_extracted",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "follow_up_weeks",
+          "expected": 4,
+          "actual": 4,
+          "ok": true
+        },
+        {
+          "name": "reviewer_role",
+          "expected": "consultant",
+          "actual": "consultant",
+          "ok": true
+        },
+        {
+          "name": "orders_placed",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "appointment_booked",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "patient_messaged",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "alerts@2026-09-09",
+          "expected": [
+            "result_overdue"
+          ],
+          "actual": [
+            "result_overdue"
+          ],
+          "ok": true
+        },
+        {
+          "name": "alert_tier@2026-09-09",
+          "expected": 0,
+          "actual": 0,
+          "ok": true
+        },
+        {
+          "name": "alert_owner@2026-09-09",
+          "expected": "Dr Sam Patel",
+          "actual": "Dr Sam Patel",
+          "ok": true
+        },
+        {
+          "name": "alert_tier@2026-09-14",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "alert_owner@2026-09-14",
+          "expected": "Dr Elena Fischer",
+          "actual": "Dr Elena Fischer",
+          "ok": true
+        },
+        {
+          "name": "alert_tier@2026-09-19",
+          "expected": 2,
+          "actual": 2,
+          "ok": true
+        },
+        {
+          "name": "alert_owner@2026-09-19",
+          "expected": "Priya Menon (service lead)",
+          "actual": "Priya Menon (service lead)",
+          "ok": true
+        },
+        {
+          "name": "loop_status",
+          "expected": "open",
+          "actual": "open",
+          "ok": true
+        }
+      ],
+      "notes": [],
+      "expected_escalation": false
+    },
+    {
+      "id": "G17",
+      "type": "escalation",
+      "title": "Alert actioned in time does not escalate",
+      "source": "mock",
+      "passed": true,
+      "checks": [
+        {
+          "name": "requires_human_review",
+          "expected": false,
+          "actual": false,
+          "ok": true
+        },
+        {
+          "name": "escalation_reasons",
+          "expected": [],
+          "actual": [],
+          "ok": true
+        },
+        {
+          "name": "investigations_extracted",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "follow_up_weeks",
+          "expected": 4,
+          "actual": 4,
+          "ok": true
+        },
+        {
+          "name": "reviewer_role",
+          "expected": "consultant",
+          "actual": "consultant",
+          "ok": true
+        },
+        {
+          "name": "orders_placed",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        },
+        {
+          "name": "appointment_booked",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "patient_messaged",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "alert_tier@2026-09-09",
+          "expected": 0,
+          "actual": 0,
+          "ok": true
+        },
+        {
+          "name": "alert_owner@2026-09-09",
+          "expected": "Dr Sam Patel",
+          "actual": "Dr Sam Patel",
+          "ok": true
+        },
+        {
+          "name": "alerts@2026-09-09",
+          "expected": [],
+          "actual": [],
+          "ok": true
+        },
+        {
+          "name": "alerts@2026-09-14",
+          "expected": [],
+          "actual": [],
+          "ok": true
+        },
+        {
+          "name": "no_escalation",
+          "expected": 0,
+          "actual": 0,
+          "ok": true
+        },
+        {
+          "name": "loop_status",
+          "expected": "open",
+          "actual": "open",
           "ok": true
         }
       ],

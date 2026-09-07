@@ -98,7 +98,7 @@
   .card-h{display:flex;align-items:center;gap:12px;margin-bottom:14px}
   .num{width:30px;height:30px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:none}
   .card-h h2{margin:0;font-size:17px;letter-spacing:-.2px}
-  .card-h h2 span{font-weight:400;color:var(--muted);font-size:14px;margin-left:6px}
+  .card-h h2 span{font-weight:400;color:var(--muted);font-size:14px;margin-left:6px;white-space:nowrap}
   .card-h small{display:block;color:var(--muted);font-size:12px;margin-top:1px}
   .status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;border:1px solid transparent;white-space:nowrap}
   .status.ok{background:var(--rule-soft);color:var(--ok);border-color:#bfe8d6}
@@ -367,7 +367,7 @@
 
   <!-- ------------------------------------------------------------- 3 -->
   <section class="card">
-    <div class="card-h"><span class="num">3</span><div><h2>Tracker</h2><small>Nothing falls through</small></div></div>
+    <div class="card-h"><span class="num">3</span><div><h2>Tracker<span>this patient</span></h2><small id="trackerSub">Nothing falls through</small></div><div class="spacer"></div><a href="#worklistCard" class="hint" id="wlLink" style="text-decoration:none;white-space:nowrap" onclick="event.preventDefault();revealCard(4)"></a></div>
     <div id="tiles"></div>
     <div id="alerts"></div>
     <div class="tl-h"><h3>Patient timeline</h3><span class="hint" id="loopCount"></span></div>
@@ -591,19 +591,26 @@ const ICONS = {
   check: '<svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>',
   bell: '<svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round"><path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></svg>',
 };
+function activeLoop() {
+  return STATE.loops.find(l => l.id === ACTIVE_LOOP) || (STATE.worklist && STATE.worklist[0] && STATE.loops.find(l => l.id === STATE.worklist[0].loop_id)) || STATE.loops[STATE.loops.length - 1] || null;
+}
 function renderTracker() {
   const open = STATE.loops.filter(l => l.status === 'open');
+  const sel = activeLoop(); if (sel) ACTIVE_LOOP = sel.id;
+  const others = STATE.loops.filter(l => l.status === 'open' && sel && l.id !== sel.id).length;
+  $('wlLink').textContent = others ? `${others} other${others === 1 ? '' : 's'} → worklist` : (STATE.loops.length > 1 ? 'worklist ↓' : '');
+  $('trackerSub').textContent = sel ? `${sel.patient.name} · ${sel.patient.clinic} · ${sel.id}` : 'Nothing falls through';
   const awaiting = open.flatMap(l => l.items).filter(i => i.status === 'result_awaited');
   const overdue = awaiting.filter(i => i.overdue), nAlerts = STATE.notifications.length;
   $('tiles').innerHTML = `<div class="tiles">
-    <div class="tile">${ICONS.loop}<b>${open.length}</b><span>Open loop${open.length === 1 ? '' : 's'}</span></div>
+    <div class="tile">${ICONS.loop}<b>${open.length}</b><span>Open loop${open.length === 1 ? '' : 's'} (clinic)</span></div>
     <div class="tile">${ICONS.clock}<b>${awaiting.length}</b><span>Results awaited</span></div>
     <div class="tile">${overdue.length ? ICONS.bell : ICONS.check}<b style="color:${overdue.length ? 'var(--bad)' : 'inherit'}">${overdue.length}</b><span>Overdue</span></div>
     <div class="tile">${nAlerts ? ICONS.bell : ICONS.check}<b style="color:${nAlerts ? 'var(--bad)' : 'inherit'}">${nAlerts}</b><span>Alert${nAlerts === 1 ? '' : 's'} open</span></div></div>`;
   renderAlerts();
-  $('loopCount').textContent = STATE.loops.length ? `${STATE.loops.length} patient${STATE.loops.length === 1 ? '' : 's'} · newest first` : '';
-  if (!STATE.loops.length) { $('loops').innerHTML = '<div class="empty">No open loops yet.</div>'; return; }
-  $('loops').innerHTML = STATE.loops.slice().reverse().map(l => {
+  $('loopCount').textContent = sel ? `opened ${fmt(sel.created)}` : '';
+  if (!sel) { $('loops').innerHTML = '<div class="empty">No open loops yet.</div>'; return; }
+  $('loops').innerHTML = [sel].map(l => {
     const appt = l.appointment, [cls, label] = loopStatus(l);
     const items = l.items.map(i => {
       const k = i.status === 'result_received' || i.status === 'reviewed' ? 'done' : i.overdue ? 'bad' : i.on_hold ? 'hold' : '';
@@ -639,7 +646,7 @@ function tierChip(n) {
 const ESCALATE_DAYS = 5;
 async function seedClinic() {
   $('seedBtn').disabled = true; $('seedBtn').textContent = 'Seeding…';
-  try { const r = await api('/api/seed', {}); STATE = r.state; render(); revealCard(4); }
+  try { const r = await api('/api/seed', {}); STATE = r.state; ACTIVE_LOOP = STATE.worklist[0]?.loop_id || ACTIVE_LOOP; render(); revealCard(4); }
   catch (e) { alert(e.message); }
   $('seedBtn').disabled = false; $('seedBtn').textContent = 'Seed clinic (6 patients)';
 }
@@ -664,7 +671,7 @@ function renderWorklist() {
   }).join('')}</tbody></table>`;
 }
 function renderAlerts() {
-  const ns = STATE.notifications;
+  const ns = STATE.notifications.filter(n => n.loop_id === ACTIVE_LOOP);
   if (!ns.length) { $('alerts').innerHTML = ''; return; }
   $('alerts').innerHTML = ns.map(n => {
     const btns = alertButtons(n);

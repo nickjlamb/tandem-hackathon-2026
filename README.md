@@ -15,7 +15,7 @@ Turns a clinician's dictated plan into a tracked, approved action plan: investig
 [![Built at NXGN × Tandem Health hackathon](https://img.shields.io/badge/built%20at-NXGN%20%C3%97%20Tandem%20Health%20hackathon%202026-6b4fbb)](#about)
 [![Synthetic data only](https://img.shields.io/badge/data-synthetic%20only-1f8a5b)](#safety-and-data)
 
-[Quick start](#quick-start-60-seconds) · [How it works](#how-it-works) · [Architecture](#architecture) · [Examples](#examples) · [Evaluation](#evaluation) · [Roadmap](#roadmap) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
+[Impact](#impact) · [Quick start](#quick-start-60-seconds) · [How it works](#how-it-works) · [Architecture](#architecture) · [Examples](#examples) · [Evaluation](#evaluation) · [Roadmap](#roadmap) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
 
 <img src="docs/images/workflow.png" alt="PlugPoint: clinic note → approved action plan → tracker with alerts" width="920">
 
@@ -40,6 +40,12 @@ After an outpatient consultation the clinician has a plan in their head: *order 
 | **Audit** | — | Every event labelled `AI` · `RULE` · `HUMAN` · `API` · `SYSTEM`. |
 
 > **Design principle:** automate the admin, keep clinical judgement visible. Routine cases flow; exceptions go to humans. Don't just generate text — complete work. Don't just demonstrate it — test it.
+
+## Impact
+
+About **11½ minutes of admin removed per outpatient action plan**: 4½ minutes of clinician time and 7 of secretary time. For a mid-sized acute trust (500k attended appointments a year) that is **~19,000 clinician hours and ~29,000 secretary hours a year**, worth about **£3.4m** at PSSRU unit costs (range £1.7m–£5.1m). The patient-safety case is that a follow-up loop no longer depends on someone remembering.
+
+Assumptions, sources, a per-trust and England-wide model and market sizing are in [`docs/impact.md`](docs/impact.md), and every number can be re-run with `python docs/impact_model.py`.
 
 ## Quick start (60 seconds)
 

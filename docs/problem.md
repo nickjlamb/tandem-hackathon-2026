@@ -27,7 +27,7 @@ RESULT:         one decision instead of a dozen admin steps, and no patient sile
 ```
 
 ## Measurable outcome
-Per patient: admin actions completed by software vs clinician decisions (shown on the plan card — typically 6 : 1). Per clinic: open loops, results awaited, overdue, alerts open (tracker summary strip). Safety: escalation cases correctly stopped (gold set).
+Per patient: admin actions completed by software vs clinician decisions (shown on the plan card — typically 6 : 1). Per clinic: open loops, results awaited, overdue, alerts open (tracker summary strip). Safety: escalation cases correctly stopped (gold set). Time saved per patient, clinic, week and trust, and market sizing: see [`impact.md`](impact.md).
 
 ## Selection rationale
 Scored highest of our three candidates on real pain (×2), admin removable (×2) and actionability; passed all three vetoes — the downstream action is real (orders, bookings, messages), the integrations are mockable, and the one-sentence clinician pitch is "nothing falls through the cracks".

@@ -250,9 +250,9 @@ Issues and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Built in an afternoon at the **NXGN × Tandem Health "Automate Admin, Land a Role" hackathon** (London, 5 September 2026) by
 
-- _Name · role_
-- _Name · role_
-- _Name · role_
+- Dr Eimear Teehan
+- Sannidhee Gupta
+- Nick Lamb
 
 Strategy notes, problem framing and the scoring rubric we used are in [`docs/`](docs/).
 

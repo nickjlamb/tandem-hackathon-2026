@@ -44,7 +44,7 @@ class Store:
                     source: str) -> dict:
         loop_id = f"L{next(self._loop_ids):03d}"
         self.audit.record(self.today, "AI",
-                          f"Action plan extracted from clinic note ({'Claude' if source == 'llm' else 'offline fixture'}): "
+                          f"Action plan extracted from clinic note ({'Claude' if source == 'llm' else 'saved extraction'}): "
                           f"{len(plan.investigations)} investigation(s), "
                           f"follow-up {'requested' if plan.follow_up else 'not mentioned'}",
                           loop_id, {"source": source})

@@ -82,7 +82,7 @@
 </header>
 <div id="noKey" hidden style="margin:14px 20px 0;max-width:1300px;margin-inline:auto;padding:0 20px"><div class="card" style="margin:14px 0 0;display:flex;gap:10px;align-items:flex-start;border-color:#f6dfb0;background:#fffaf0">
   <span style="flex:none;width:22px;height:22px;border-radius:50%;background:#fff4e0;color:#d97706;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">!</span>
-  <div style="font-size:13px"><b>Live extraction isn't available on this server</b> — no <code>ANTHROPIC_API_KEY</code> is configured, so only the offline run (rules, gate and tracker against fixture extractions) can be executed here. To run the live evaluation, set the key in <code>.env</code> locally or as an environment variable on the host. The last live result is recorded in the README.</div>
+  <div style="font-size:13px" id="noKeyMsg"><b>Live extraction isn't available on this server</b> — no <code>ANTHROPIC_API_KEY</code> is configured, so only the offline run (rules, gate and tracker against fixture extractions) can be executed here. To run the live evaluation, set the key in <code>.env</code> locally or as an environment variable on the host. The last live result is recorded in the README.</div>
 </div></div>
 <main>
   <div class="card">
@@ -99,6 +99,9 @@ async function load() {
     if (m.llm !== 'claude') {
       LIVE_AVAILABLE = false; $('btnLive').disabled = true; $('btnLive').title = 'Set ANTHROPIC_API_KEY on the server to enable live extraction';
       $('btnLive').textContent = 'Live extraction unavailable'; $('noKey').hidden = false;
+    } else if (!m.live_eval) {
+      LIVE_AVAILABLE = false; $('btnLive').disabled = true; $('btnLive').title = 'Live evaluation is run locally, not on the public demo';
+      $('btnLive').textContent = 'Live run: see README'; $('noKeyMsg').innerHTML = '<b>Live evaluation is switched off on the public demo</b> — it makes 17 model calls per run. You can run the offline evaluation here (rules, gate and tracker against fixture extractions); the live evaluation is run locally with <code>python -m eval.run_eval</code>, and its latest result is recorded in the README.'; $('noKey').hidden = false;
     }
   } catch (e) {}
   const r = await fetch('/api/eval/results'); render(await r.json());

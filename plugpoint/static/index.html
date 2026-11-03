@@ -264,6 +264,8 @@
   .steps .num{width:26px;height:26px;font-size:12px}
   .steps b{display:block}
   .steps span{color:var(--muted)}
+  .phi-warn{font-size:12px;line-height:1.45;color:#8a4b08;background:#fffaf0;border:1px solid #f6dfb0;border-radius:9px;padding:7px 10px;margin:0 0 8px}
+  .phi-warn b{color:#7a3e04}
   .faq{border:1px solid var(--line);border-radius:12px;overflow:hidden}
   .faq details{border-top:1px solid var(--line)}
   .faq details:first-child{border-top:0}
@@ -328,6 +330,7 @@
       <details><summary>Does it automatically order tests?</summary><div class="a">Only after clinician approval. In this demo, downstream EPR, ordering, booking and messaging systems are simulated.</div></details>
       <details><summary>What happens if a result doesn’t arrive?</summary><div class="a">The tracker flags it as overdue and alerts the requesting clinician. If nobody actions the alert within five days it escalates to the clinic consultant, and after another five to the service lead, so a loop cannot disappear because one person was away.</div></details>
       <details><summary>What is the clinic worklist for?</summary><div class="a">One board for the whole clinic: every open loop ranked by risk — appointment imminent with results outstanding, overdue, on hold, not closed, on track — with its owner, age and the same actions as the tracker. It is the Monday-morning view rather than the per-patient one.</div></details>
+      <details><summary>Can I try my own clinic note?</summary><div class="a">Yes, with synthetic notes only: never paste real patient information. Edited or new notes are sent to Anthropic's API for extraction, and a few can be run per hour. Your demo state is private to your browser and is cleared after two hours of inactivity.</div></details>
       <details><summary>Is the AI trusted to get everything right?</summary><div class="a">No. AI handles language extraction. Deterministic checks and clinician approval provide separate safeguards before actions are executed.</div></details>
     </div>
     <h3>Demo mode</h3>
@@ -351,7 +354,8 @@
     <label>Note author</label>
     <select id="clinician" onchange="renderWho()"></select>
     <label>Consultation note / dictated plan</label>
-    <textarea id="note"></textarea>
+    <div class="phi-warn" id="phiWarn" role="note"><b>Synthetic notes only.</b> Don't paste real patient information. Edited or new notes are sent to Anthropic's API for extraction.</div>
+    <textarea id="note" maxlength="4000"></textarea>
     <div class="row mt">
       <button class="primary" id="extractBtn" onclick="extract()" style="flex:1">Extract action plan</button>
     </div>
@@ -449,7 +453,10 @@ async function loadSample(userChanged = false) {
   $('patientBox').innerHTML = `<div><span>Patient</span><b>${esc(p.name)}</b></div><div><span>Age / Sex</span><b>${p.age}${p.sex}</b></div><div><span>Hospital no.</span><b>${p.hospital_no}</b></div><div><span>Clinic</span><b>${p.clinic}</b></div>`;
   $('patientBox').dataset.pid = p.id;
   $('extractErr').textContent = '';
-  $('extractHint').textContent = META.llm === 'claude' ? 'Claude · schema-constrained extraction' : 'Offline fixture for the built-in samples · set ANTHROPIC_API_KEY for free text';
+  $('extractHint').textContent = META.llm === 'claude'
+    ? (META.samples_live ? 'Claude · schema-constrained extraction' : 'Built-in samples use their saved extraction · edit the note or write your own to run Claude live')
+    : 'Offline fixture for the built-in samples · set ANTHROPIC_API_KEY for free text';
+  $('phiWarn').hidden = META.llm !== 'claude';
   renderWho();
   if (userChanged) render();
 }

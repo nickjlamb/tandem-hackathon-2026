@@ -67,6 +67,23 @@ Requirements: Python 3.11+. Tested on macOS and Linux.
 
 **Deploy in one click:** the repo includes a [`render.yaml`](render.yaml) blueprint — on [Render](https://render.com) choose *New → Blueprint*, pick this repo, and it's live on a free instance in a few minutes (add `ANTHROPIC_API_KEY` in the dashboard for live extraction). A `Procfile` is included for Railway / Heroku-style hosts.
 
+**Running it as a public demo with an API key.** The hosted demo is built to be left open:
+
+- Each visitor gets their own demo state (session cookie, cleared after two hours idle), so one visitor's notes never appear in another's worklist.
+- Unedited built-in samples replay their saved extraction (instant and free); edited or new notes go to Claude, with a "synthetic notes only" warning above the note box.
+- Live extractions are rate-limited per IP and per day, and the 17-call live gold evaluation is switched off on the public page (run it locally).
+
+| Variable | Default | What it controls |
+|---|---|---|
+| `PLUGPOINT_IP_HOURLY` | 5 | Live extractions per visitor IP per hour |
+| `PLUGPOINT_DAILY_CAP` | 50 | Live extractions per day across the server |
+| `PLUGPOINT_MAX_NOTE_CHARS` | 4000 | Longest note accepted |
+| `PLUGPOINT_SESSION_IDLE_SECONDS` | 7200 | How long an idle visitor's demo state is kept |
+| `PLUGPOINT_PUBLIC_LIVE_EVAL` | off | Set to `1` to allow the live evaluation from `/eval` |
+| `PLUGPOINT_SAMPLES_LIVE` | off | Set to `1` to send the built-in samples to Claude too |
+
+Set a monthly spend limit on the API key as a backstop.
+
 ## How it works
 
 ```mermaid

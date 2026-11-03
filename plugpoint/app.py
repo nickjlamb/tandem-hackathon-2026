@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel
 
 from .extract import ExtractionUnavailable, extract_action_plan, llm_available
@@ -23,6 +23,26 @@ from .schema import ApproveRequest, PlanRequest
 from .tracker import Store
 
 app = FastAPI(title="PlugPoint", version="0.1.0")
+
+# ------------------------------------------------------------------ canonical address
+# Requests to an old host (e.g. the original Railway URL) get a permanent redirect to the same path
+# on the canonical domain. Only hosts listed here are redirected, so localhost and the canonical
+# domain are untouched.
+CANONICAL_HOST = os.environ.get("PLUGPOINT_CANONICAL_HOST", "plugpoint.pharmatools.ai")
+REDIRECT_HOSTS = {h.strip().lower() for h in os.environ.get(
+    "PLUGPOINT_REDIRECT_HOSTS", "web-production-4653b.up.railway.app").split(",") if h.strip()}
+
+
+@app.middleware("http")
+async def redirect_old_hosts(request: Request, call_next):
+    host = request.headers.get("host", "").split(":")[0].lower()
+    if CANONICAL_HOST and host in REDIRECT_HOSTS:
+        target = f"https://{CANONICAL_HOST}{request.url.path}"
+        if request.url.query:
+            target += f"?{request.url.query}"
+        # 301 for page loads; 308 keeps the method and body for any API calls still using the old host
+        return RedirectResponse(target, status_code=301 if request.method in ("GET", "HEAD") else 308)
+    return await call_next(request)
 STATIC = Path(__file__).parent / "static"
 
 # ------------------------------------------------------------------ public-demo safeguards

@@ -45,6 +45,14 @@
   .seg button{border:0;border-radius:0;border-left:1px solid var(--line);padding:7px 12px;font-size:13px}
   .seg button:first-child{border-left:0}
   .hint{font-size:12px;color:var(--muted)}
+  .srcseg{display:flex;width:100%}
+  .seg.srcseg button{white-space:normal}
+  .srcseg button{flex:1;text-align:left;padding:9px 12px;line-height:1.3}
+  .srcseg button b{display:block;font-size:13px;font-weight:600}
+  .srcseg button span{display:block;font-size:11.5px;color:var(--muted);font-weight:400}
+  .srcseg button.on{background:var(--accent-soft)}
+  .srcseg button.on b{color:var(--accent)}
+  .srcseg button:disabled{cursor:not-allowed;opacity:.55}
   .who{width:34px;height:34px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:12px}
   .goldlink{display:inline-flex;align-items:center;gap:6px;background:#fff7e6;border:1px solid #f4dfb0;color:#8a5a00;border-radius:999px;padding:6px 12px;font-weight:600;font-size:13px;text-decoration:none}
   .mode{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:#fff}
@@ -330,7 +338,7 @@
       <details><summary>Does it automatically order tests?</summary><div class="a">Only after clinician approval. In this demo, downstream EPR, ordering, booking and messaging systems are simulated.</div></details>
       <details><summary>What happens if a result doesn’t arrive?</summary><div class="a">The tracker flags it as overdue and alerts the requesting clinician. If nobody actions the alert within five days it escalates to the clinic consultant, and after another five to the service lead, so a loop cannot disappear because one person was away.</div></details>
       <details><summary>What is the clinic worklist for?</summary><div class="a">One board for the whole clinic: every open loop ranked by risk — appointment imminent with results outstanding, overdue, on hold, not closed, on track — with its owner, age and the same actions as the tracker. It is the Monday-morning view rather than the per-patient one.</div></details>
-      <details><summary>Can I try my own clinic note?</summary><div class="a">Yes, with synthetic notes only: never paste real patient information. Edited or new notes are sent to Anthropic's API for extraction, and a few can be run per hour. Your demo state is private to your browser and is cleared after two hours of inactivity.</div></details>
+      <details><summary>Can I try my own clinic note?</summary><div class="a">Yes: choose <b>Paste your own</b> at the top of the Clinic note card, or edit one of the samples. Synthetic notes only: never paste real patient information. Edited or new notes are sent to Anthropic's API for extraction, and a few can be run per hour. Your demo state is private to your browser and is cleared after two hours of inactivity.</div></details>
       <details><summary>Is the AI trusted to get everything right?</summary><div class="a">No. AI handles language extraction. Deterministic checks and clinician approval provide separate safeguards before actions are executed.</div></details>
     </div>
     <h3>Demo mode</h3>
@@ -348,14 +356,24 @@
   <!-- ------------------------------------------------------------- 1 -->
   <section class="card">
     <div class="card-h"><span class="num">1</span><div><h2>Clinic note</h2><small>From Tandem</small></div><div class="spacer"></div><span class="status ok" id="noteStatus"><span class="dot"></span>Ready</span></div>
-    <label style="margin-top:0">Sample note</label>
-    <select id="sample" onchange="loadSample(true)"></select>
+    <div class="seg srcseg" role="group" aria-label="Where the note comes from">
+      <button type="button" id="srcSample" class="on" aria-pressed="true" onclick="setSource('sample')"><b>Use a sample note</b><span>Four built-in cases · instant</span></button>
+      <button type="button" id="srcOwn" aria-pressed="false" onclick="setSource('own')"><b>Paste your own</b><span id="srcOwnSub">Synthetic notes only · runs Claude live</span></button>
+    </div>
+    <div id="sampleRow">
+      <label>Sample note</label>
+      <select id="sample" onchange="loadSample(true)"></select>
+    </div>
+    <div id="patientRow" hidden>
+      <label>Attach the note to</label>
+      <select id="ownPatient" onchange="loadOwn(true)"></select>
+    </div>
     <div class="kv" id="patientBox"></div>
     <label>Note author</label>
     <select id="clinician" onchange="renderWho()"></select>
     <label>Consultation note / dictated plan</label>
     <div class="phi-warn" id="phiWarn" role="note"><b>Synthetic notes only.</b> Don't paste real patient information. Edited or new notes are sent to Anthropic's API for extraction.</div>
-    <textarea id="note" maxlength="4000"></textarea>
+    <textarea id="note" maxlength="4000" oninput="updateHint()"></textarea>
     <div class="row mt">
       <button class="primary" id="extractBtn" onclick="extract()" style="flex:1">Extract action plan</button>
     </div>
@@ -436,6 +454,10 @@ async function init() {
   $('sample').innerHTML = META.samples.map(s => `<option value="${s.id}">${esc(s.label)}</option>`).join('');
   $('clinician').innerHTML = META.clinicians.map(c => `<option value="${esc(c.name)}|${c.role}">${esc(c.name)} · ${c.role}</option>`).join('');
   document.querySelectorAll('#auditTabs button').forEach(b => b.onclick = () => { AUDIT_FILTER = b.dataset.f; document.querySelectorAll('#auditTabs button').forEach(x => x.classList.toggle('on', x === b)); renderAudit(); });
+  $('ownPatient').innerHTML = META.patients.map(p => `<option value="${p.id}">${esc(p.name)} · ${esc(p.clinic)}</option>`).join('');
+  if (META.llm !== 'claude') {  // no API key on this server: only the built-in samples can be extracted
+    $('srcOwn').disabled = true; $('srcOwnSub').textContent = 'Needs ANTHROPIC_API_KEY on this server';
+  }
   loadSample();
   STATE = await api('/api/state', null, 'GET');
   let hidden = true;  // audit hidden by default; a viewer's explicit choice is remembered
@@ -449,26 +471,63 @@ async function loadSample(userChanged = false) {
   if (userChanged) { STATE = await api('/api/reset', {}); ACTIVE_LOOP = null; ADDED = []; EDITS = {}; }
   $('note').value = s.note;
   $('clinician').value = `${s.clinician.name}|${s.clinician.role}`;
-  const p = META.patients.find(p => p.id === s.patient_id);
-  $('patientBox').innerHTML = `<div><span>Patient</span><b>${esc(p.name)}</b></div><div><span>Age / Sex</span><b>${p.age}${p.sex}</b></div><div><span>Hospital no.</span><b>${p.hospital_no}</b></div><div><span>Clinic</span><b>${p.clinic}</b></div>`;
-  $('patientBox').dataset.pid = p.id;
+  showPatient(s.patient_id);
   $('extractErr').textContent = '';
-  $('extractHint').textContent = META.llm === 'claude'
-    ? (META.samples_live ? 'Claude · schema-constrained extraction' : 'Built-in samples use their saved extraction · edit the note or write your own to run Claude live')
-    : 'Offline fixture for the built-in samples · set ANTHROPIC_API_KEY for free text';
   $('phiWarn').hidden = META.llm !== 'claude';
+  updateHint();
   renderWho();
   if (userChanged) render();
+}
+function showPatient(pid) {
+  const p = META.patients.find(p => p.id === pid);
+  $('patientBox').innerHTML = `<div><span>Patient</span><b>${esc(p.name)}</b></div><div><span>Age / Sex</span><b>${p.age}${p.sex}</b></div><div><span>Hospital no.</span><b>${p.hospital_no}</b></div><div><span>Clinic</span><b>${p.clinic}</b></div>`;
+  $('patientBox').dataset.pid = p.id;
+}
+// The note comes from one of two places: a built-in sample (replays its saved extraction) or the
+// visitor's own synthetic note (one live model call). SOURCE only drives the form; the server
+// decides saved-vs-live itself by comparing the note text with the sample.
+let SOURCE = 'sample';
+async function setSource(src) {
+  if (src === SOURCE || (src === 'own' && META.llm !== 'claude')) return;
+  SOURCE = src;
+  $('srcSample').classList.toggle('on', src === 'sample'); $('srcSample').setAttribute('aria-pressed', src === 'sample');
+  $('srcOwn').classList.toggle('on', src === 'own'); $('srcOwn').setAttribute('aria-pressed', src === 'own');
+  $('sampleRow').hidden = src !== 'sample'; $('patientRow').hidden = src !== 'own';
+  if (src === 'sample') { $('note').placeholder = ''; await loadSample(true); }
+  else { $('ownPatient').value = $('patientBox').dataset.pid; await loadOwn(true); $('note').focus(); }
+}
+async function loadOwn(userChanged = false) {
+  if (userChanged) { STATE = await api('/api/reset', {}); ACTIVE_LOOP = null; ADDED = []; EDITS = {}; }
+  $('note').value = '';
+  $('note').placeholder = 'Paste or type a synthetic clinic note here, ending with the plan. For example: "Plan: CT chest. Bloods today: FBC, CRP. Follow up in 6 weeks."';
+  showPatient($('ownPatient').value);
+  $('extractErr').textContent = '';
+  updateHint();
+  if (userChanged) render();
+}
+function noteIsSample() {
+  const s = META.samples.find(x => x.id === $('sample').value);
+  return SOURCE === 'sample' && $('note').value.trim() === s.note.trim();
+}
+function updateHint() {
+  let t;
+  if (META.llm !== 'claude') t = 'Offline fixture for the built-in samples · set ANTHROPIC_API_KEY for free text';
+  else if (SOURCE === 'own') t = 'Your note is sent to Claude for extraction · takes a few seconds';
+  else if (META.samples_live) t = 'Claude · schema-constrained extraction';
+  else if (noteIsSample()) t = 'Unedited samples replay their saved extraction, so the result is instant';
+  else t = 'You have edited this sample, so it will be sent to Claude for extraction · takes a few seconds';
+  $('extractHint').textContent = t;
 }
 function currentClinician() { return $('clinician').value.split('|')[0]; }
 function renderWho() { $('who').textContent = initials(currentClinician()); $('who').title = 'Acting as ' + currentClinician(); }
 
 async function extract() {
   const [name, role] = $('clinician').value.split('|');
-  const sampleId = $('sample').value, s = META.samples.find(x => x.id === sampleId), note = $('note').value;
+  const sampleId = $('sample').value, note = $('note').value;
+  if (!note.trim()) { $('extractErr').textContent = 'Paste or type a clinic note first.'; $('note').focus(); return; }
   $('extractBtn').disabled = true; $('extractBtn').textContent = 'Extracting…'; $('extractErr').textContent = '';
   try {
-    const r = await api('/api/plan', {patient_id: $('patientBox').dataset.pid, note, clinician: {name, role}, sample_id: note.trim() === s.note.trim() ? sampleId : null});
+    const r = await api('/api/plan', {patient_id: $('patientBox').dataset.pid, note, clinician: {name, role}, sample_id: noteIsSample() ? sampleId : null});
     STATE = r.state; ACTIVE_LOOP = r.loop.id; ADDED = []; EDITS = {}; render();
     revealCard(2);  // on phones the plan card sits below the fold
   } catch (e) { $('extractErr').textContent = e.message; }

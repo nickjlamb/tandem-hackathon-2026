@@ -1,9 +1,9 @@
 {
   "summary": {
-    "mode": "offline fixtures",
-    "model": null,
-    "run_at": "2026-11-23",
-    "seconds": 0.0,
+    "mode": "claude",
+    "model": "claude-sonnet-4-5",
+    "run_at": "2026-09-07",
+    "seconds": 70.7,
     "total": 17,
     "passed": 17,
     "failed": 0,
@@ -36,7 +36,7 @@
       "id": "G01",
       "type": "routine",
       "title": "Renal lesion: MRI + bloods, 6 wk, consultant review (happy path)",
-      "source": "mock",
+      "source": "llm",
       "passed": true,
       "checks": [
         {
@@ -113,7 +113,7 @@
       "id": "G02",
       "type": "routine",
       "title": "Bloods only, 4 wk, no reviewer named (defaults to author)",
-      "source": "mock",
+      "source": "llm",
       "passed": true,
       "checks": [
         {
@@ -184,7 +184,7 @@
       "id": "G03",
       "type": "routine",
       "title": "Consultant orders CT, 8 wk own follow-up",
-      "source": "mock",
+      "source": "llm",
       "passed": true,
       "checks": [
         {
@@ -249,7 +249,7 @@
       "id": "G04",
       "type": "edge",
       "title": "Follow-up only, no investigations",
-      "source": "mock",
+      "source": "llm",
       "passed": true,
       "checks": [
         {
@@ -314,7 +314,7 @@
       "id": "G05",
       "type": "edge",
       "title": "Investigations but no follow-up (results to GP)",
-      "source": "mock",
+      "source": "llm",
       "passed": true,
       "checks": [
         {
@@ -379,7 +379,7 @@
       "id": "G06",
       "type": "routine",
       "title": "Urgent CT with 3 wk follow-up (just after imaging turnaround)",
-      "source": "mock",
+      "source": "llm",
       "passed": true,
       "checks": [
         {
@@ -454,7 +454,7 @@
       "id": "G07",
       "type": "edge",
       "title": "Biopsy with 4 wk follow-up (biopsy turnaround 21 d fits)",
-      "source": "mock",
+      "source": "llm",
       "passed": true,
       "checks": [
         {
@@ -519,7 +519,7 @@
       "id": "G08",
       "type": "edge",
       "title": "Interval given in days (10 days -> 1 wk), bloods only",
-      "source": "mock",
+      "source": "llm",
       "passed": true,
       "checks": [
         {
@@ -584,7 +584,7 @@
       "id": "G09",
       "type": "ambiguous",
       "title": "Conflicting follow-up intervals in note (2 wk vs 3 months)",
-      "source": "mock",
+      "source": "llm",
       "passed": true,
       "checks": [
         {
@@ -653,7 +653,7 @@
       "id": "G10",
       "type": "ambiguous",
       "title": "Follow-up requested but no interval stated",
-      "source": "mock",
+      "source": "llm",
       "passed": true,
       "checks": [
         {
@@ -716,7 +716,7 @@
       "id": "G11",
       "type": "escalation",
       "title": "Investigation with no clinical indication",
-      "source": "mock",
+      "source": "llm",
       "passed": true,
       "checks": [
         {
@@ -779,7 +779,7 @@
       "id": "G12",
       "type": "escalation",
       "title": "Follow-up booked before results can be back (biopsy, 2 wk)",
-      "source": "mock",
+      "source": "llm",
       "passed": true,
       "checks": [
         {
@@ -842,7 +842,7 @@
       "id": "G13",
       "type": "escalation",
       "title": "Two problems at once: no indication AND follow-up too early",
-      "source": "mock",
+      "source": "llm",
       "passed": true,
       "checks": [
         {
@@ -907,7 +907,7 @@
       "id": "G14",
       "type": "escalation",
       "title": "Scan put on hold by radiology -> clinician must engage; resolved with new date",
-      "source": "mock",
+      "source": "llm",
       "passed": true,
       "checks": [
         {
@@ -988,7 +988,7 @@
       "id": "G15",
       "type": "routine",
       "title": "Results back on time, appointment date passes, clinician closes loop",
-      "source": "mock",
+      "source": "llm",
       "passed": true,
       "checks": [
         {
@@ -1079,7 +1079,7 @@
       "id": "G16",
       "type": "escalation",
       "title": "Alert nobody actions escalates: owner -> consultant after 5 days -> service lead after 10",
-      "source": "mock",
+      "source": "llm",
       "passed": true,
       "checks": [
         {
@@ -1190,7 +1190,7 @@
       "id": "G17",
       "type": "escalation",
       "title": "Alert actioned in time does not escalate",
-      "source": "mock",
+      "source": "llm",
       "passed": true,
       "checks": [
         {

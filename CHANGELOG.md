@@ -6,6 +6,9 @@ All notable changes to PlugPoint are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+- Default extraction model is now `claude-sonnet-5-5` (was `claude-sonnet-4-5`, which Anthropic retires from the Claude API on 30 November 2026). `PLUGPOINT_MODEL` still overrides it. The live gold results in the README were measured on `claude-sonnet-4-5` and have not been re-run on the new default.
+
 ### Fixed
 - Extraction prompt: a note that explicitly says no clinic follow-up is needed now yields `follow_up: null` instead of a follow-up with no interval (found by the live gold run, confirmed on re-run: 17/17 live).
 - Gold case G09 note now states an indication for the bloods it lists.

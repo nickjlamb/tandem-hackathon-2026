@@ -7,6 +7,7 @@ All notable changes to PlugPoint are documented here. The format follows
 ## [Unreleased]
 
 ### Changed
+- Extract button: a live extraction (edited sample or pasted note) now shows a spinner and "Extracting with Claude…" on the button, a status line with the expected wait, and a placeholder where the plan will appear. Saved samples stay instant with no spinner. The status is announced to screen readers and the animation respects reduced-motion settings.
 - Clinic note card: a two-way switch at the top makes the choice explicit — **Use a sample note** (replays the saved extraction, instant) or **Paste your own** (synthetic notes only, one live Claude call). Pasting your own shows an empty note box and a patient picker; the hint under the button now says whether the next click is instant or live, including when a sample has been edited. On a server with no API key the second option is disabled.
 - Default extraction model is now `claude-sonnet-5-5` (was `claude-sonnet-4-5`, which Anthropic retires from the Claude API on 30 November 2026). `PLUGPOINT_MODEL` still overrides it. The live gold results in the README were measured on `claude-sonnet-4-5` and have not been re-run on the new default.
 

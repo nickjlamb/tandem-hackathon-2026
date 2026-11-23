@@ -672,7 +672,7 @@
           "name": "Dr Sam Patel",
           "role": "registrar"
         },
-        "note": "Urology clinic. 58F. Plan: MRI abdomen with contrast to characterise left renal lesion. Follow up in 6 weeks with Mr Hollis.",
+        "note": "Urology clinic. 58F. Plan: MRI abdomen with contrast to characterise left renal lesion. Follow up in 6 weeks with Mr Hollis (consultant).",
         "mock_plan": {
           "investigations": [
             {

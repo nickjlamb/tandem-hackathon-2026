@@ -24,6 +24,14 @@
   button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;padding:10px 16px}
   button.primary:hover{background:#1d4ed8}
   button.primary:disabled{opacity:.5;cursor:not-allowed}
+  /* loading state: the button keeps its colour and size, shows a spinner and says what is happening */
+  button.primary[aria-busy=true]{opacity:1;cursor:progress;display:inline-flex;align-items:center;justify-content:center;gap:9px}
+  .spin{width:15px;height:15px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:spin .7s linear infinite;flex:none}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .skel{padding:6px 0 2px}
+  .skel i{display:block;height:13px;border-radius:6px;margin:0 0 11px;background:linear-gradient(90deg,var(--line) 25%,#f4f6fa 50%,var(--line) 75%);background-size:200% 100%;animation:shimmer 1.4s ease-in-out infinite}
+  @keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+  @media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}.skel i{animation:none}}
   button.small{padding:5px 10px;font-size:12px;border-radius:8px}
   button.ghost{background:transparent;border-color:transparent;color:var(--muted)}
   button.ghost:hover{background:var(--soft);color:var(--ink)}
@@ -377,8 +385,8 @@
     <div class="row mt">
       <button class="primary" id="extractBtn" onclick="extract()" style="flex:1">Extract action plan</button>
     </div>
-    <div class="hint" style="text-align:center;margin-top:8px" id="extractHint"></div>
-    <div class="err" id="extractErr"></div>
+    <div class="hint" style="text-align:center;margin-top:8px" id="extractHint" role="status" aria-live="polite"></div>
+    <div class="err" id="extractErr" role="alert"></div>
   </section>
 
   <!-- ------------------------------------------------------------- 2 -->
@@ -525,13 +533,29 @@ async function extract() {
   const [name, role] = $('clinician').value.split('|');
   const sampleId = $('sample').value, note = $('note').value;
   if (!note.trim()) { $('extractErr').textContent = 'Paste or type a clinic note first.'; $('note').focus(); return; }
-  $('extractBtn').disabled = true; $('extractBtn').textContent = 'Extracting…'; $('extractErr').textContent = '';
+  const btn = $('extractBtn'), saved = noteIsSample() && !META.samples_live, live = !saved && META.llm === 'claude';
+  btn.disabled = true; $('extractErr').textContent = '';
+  // A saved sample comes back at once, so it gets no spinner (a flash of one reads as a glitch).
+  // A live call takes seconds: say so on the button, in the hint, and where the plan will appear.
+  let slow = null;
+  if (live) {
+    btn.setAttribute('aria-busy', 'true');
+    btn.innerHTML = '<span class="spin" aria-hidden="true"></span><span>Extracting with Claude…</span>';
+    $('extractHint').textContent = 'Claude is reading the note · usually 5 to 10 seconds';
+    $('planSub').textContent = 'Extracting the plan…'; $('planStatus').innerHTML = '';
+    $('plan').innerHTML = '<div class="skel" aria-hidden="true"><i style="width:55%"></i><i style="width:90%"></i><i style="width:78%"></i><i style="width:40%"></i></div>';
+    slow = setTimeout(() => { $('extractHint').textContent = 'Still working · longer notes take a little more time'; }, 12000);
+  }
+  let ok = false;
   try {
     const r = await api('/api/plan', {patient_id: $('patientBox').dataset.pid, note, clinician: {name, role}, sample_id: noteIsSample() ? sampleId : null});
-    STATE = r.state; ACTIVE_LOOP = r.loop.id; ADDED = []; EDITS = {}; render();
-    revealCard(2);  // on phones the plan card sits below the fold
+    STATE = r.state; ACTIVE_LOOP = r.loop.id; ADDED = []; EDITS = {}; ok = true;
   } catch (e) { $('extractErr').textContent = e.message; }
-  $('extractBtn').disabled = false; $('extractBtn').textContent = 'Extract action plan';
+  clearTimeout(slow);
+  btn.disabled = false; btn.removeAttribute('aria-busy'); btn.textContent = 'Extract action plan';
+  updateHint();
+  render();  // shows the new plan, or puts back whatever the skeleton replaced if the call failed
+  if (ok) revealCard(2);  // on phones the plan card sits below the fold
 }
 
 function edited(itemId, field, value) {

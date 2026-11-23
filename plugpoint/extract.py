@@ -12,7 +12,7 @@ import os
 from .fixtures import MOCK_PLANS
 from .schema import ActionPlan
 
-MODEL = os.environ.get("PLUGPOINT_MODEL", "claude-sonnet-4-5")
+MODEL = os.environ.get("PLUGPOINT_MODEL", "claude-sonnet-5-5")
 
 SYSTEM_PROMPT = """You are an extraction service for an outpatient clinic workflow tool.
 Read the clinician's clinic note and record the post-consultation ACTION PLAN the clinician has

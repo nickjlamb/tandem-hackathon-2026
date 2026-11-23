@@ -8,6 +8,7 @@ All notable changes to PlugPoint are documented here. The format follows
 
 ### Changed
 - Clinic note card: a two-way switch at the top makes the choice explicit — **Use a sample note** (replays the saved extraction, instant) or **Paste your own** (synthetic notes only, one live Claude call). Pasting your own shows an empty note box and a patient picker; the hint under the button now says whether the next click is instant or live, including when a sample has been edited. On a server with no API key the second option is disabled.
+- Default extraction model is now `claude-sonnet-5-5` (was `claude-sonnet-4-5`, which Anthropic retires from the Claude API on 30 November 2026). `PLUGPOINT_MODEL` still overrides it. The live gold results in the README were measured on `claude-sonnet-4-5` and have not been re-run on the new default.
 
 ### Fixed
 - Extraction prompt: a note that explicitly says no clinic follow-up is needed now yields `follow_up: null` instead of a follow-up with no interval (found by the live gold run, confirmed on re-run: 17/17 live).

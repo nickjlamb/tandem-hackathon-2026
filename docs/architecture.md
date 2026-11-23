@@ -11,7 +11,7 @@ See the diagram in the [README](../README.md#how-it-works). Every step is labell
 - **Integrations**: `MockEPR`, `MockOrderComms`, `MockScheduling`, `MockPatientMessaging`. Each documents the production equivalent (FHIR ServiceRequest / Appointment / DocumentReference, SMS gateway).
 
 ## LLM component (`extract.py`)
-One call. Forced tool use against the `ActionPlan` JSON schema. The system prompt forbids adding, inferring or recommending anything not in the note, requires verbatim evidence quotes, and asks for every follow-up interval mentioned so the *rules* can detect conflicts. Offline fixtures stand in when there is no API key.
+One call. Structured output constrained to the `ActionPlan` JSON schema. The system prompt forbids adding, inferring or recommending anything not in the note, requires verbatim evidence quotes, and asks for every follow-up interval mentioned so the *rules* can detect conflicts. Offline fixtures stand in when there is no API key.
 
 ## Human / clinician checkpoints
 - **Approval**: nothing leaves the system before it. The plan is editable (amend, add, drop); edits are HUMAN audit entries.

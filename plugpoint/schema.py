@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 Category = Literal["imaging", "bloods", "biopsy", "other"]
 Urgency = Literal["routine", "urgent"]
@@ -25,6 +25,11 @@ class Investigation(BaseModel):
     urgency: Urgency = "routine"
     evidence: str = Field(default="", description="Verbatim quote from the note supporting this item")
 
+    @field_validator("category", "urgency", mode="before")
+    @classmethod
+    def _lower(cls, v):  # structured outputs do not guarantee enum capitalisation
+        return v.lower() if isinstance(v, str) else v
+
 
 class FollowUp(BaseModel):
     interval_weeks: Optional[int] = Field(
@@ -41,6 +46,11 @@ class FollowUp(BaseModel):
     )
     purpose: Optional[str] = None
     evidence: str = ""
+
+    @field_validator("reviewer_role", mode="before")
+    @classmethod
+    def _lower(cls, v):  # structured outputs do not guarantee enum capitalisation
+        return v.lower() if isinstance(v, str) else v
 
 
 class ActionPlan(BaseModel):

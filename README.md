@@ -144,7 +144,7 @@ Alert:        tier 0 (requesting clinician) ─5 d─► tier 1 (clinic consulta
 ```
 plugpoint/
 ├── schema.py        Pydantic contracts: ActionPlan, Investigation, FollowUp, GateResult …
-├── extract.py       the ONE LLM call (forced tool use → ActionPlan); offline fixtures fallback   [AI]
+├── extract.py       the ONE LLM call (structured output → ActionPlan); offline fixtures fallback   [AI]
 ├── rules.py         5 plan checks, turnaround table, reviewer rule, earliest-date maths         [RULE]
 ├── tracker.py       Store: loops, items, approval, events, safety-net checks, escalation, worklist [SYSTEM]
 ├── seed.py          synthetic clinic (6 backdated loops walked forward day by day) for the worklist

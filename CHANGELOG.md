@@ -11,8 +11,10 @@ All notable changes to PlugPoint are documented here. The format follows
 - Default extraction model is now `claude-sonnet-5-5` (was `claude-sonnet-4-5`, which Anthropic retires from the Claude API on 30 November 2026). `PLUGPOINT_MODEL` still overrides it. The live gold results in the README were measured on `claude-sonnet-4-5` and have not been re-run on the new default.
 
 ### Fixed
+- Live extraction on `claude-sonnet-5-5` failed with a 400 (`tool_choice: type "tool" and "any" are not supported for this model`). Extraction now uses structured outputs (`output_config.format` with the `ActionPlan` JSON schema) instead of a forced tool call; `anthropic>=2.12` is required. Output budget raised to 4096 tokens (`PLUGPOINT_MAX_TOKENS`), and enum values are accepted case-insensitively.
 - Extraction prompt: a note that explicitly says no clinic follow-up is needed now yields `follow_up: null` instead of a follow-up with no interval (found by the live gold run, confirmed on re-run: 17/17 live).
 - Gold case G09 note now states an indication for the bloods it lists.
+- Gold case G14 note now reads "with Mr Hollis (consultant)". The live run on `claude-sonnet-5-5` (23 Nov, 16/17) failed G14 because the note named Mr Hollis without stating his role: the model left `reviewer_role` null, as the prompt instructs, and the rules defaulted to the note's author. G14 tests the radiology hold, not role inference, so the note was made explicit. A note that names a consultant without the word "consultant" is still booked with the author and not flagged for review.
 - Eval runner records an extraction error as a failed case instead of crashing the summary.
 
 ## [0.1.0] — 2026-09-05

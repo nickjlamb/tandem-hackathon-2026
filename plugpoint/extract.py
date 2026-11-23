@@ -1,5 +1,5 @@
 """The ONE place an LLM is used: turn the clinician's free-text plan into an
-ActionPlan. Schema-constrained via forced tool use. The model is told not to
+ActionPlan. Schema-constrained via structured outputs. The model is told not to
 add, infer or recommend anything the note does not say.
 
 Falls back to hand-written fixtures (fixtures.MOCK_PLANS) when there is no API
@@ -13,6 +13,8 @@ from .fixtures import MOCK_PLANS
 from .schema import ActionPlan
 
 MODEL = os.environ.get("PLUGPOINT_MODEL", "claude-sonnet-5-5")
+# Newer models think before answering and that counts against the output budget, so leave headroom.
+MAX_TOKENS = int(os.environ.get("PLUGPOINT_MAX_TOKENS", 4096))
 
 SYSTEM_PROMPT = """You are an extraction service for an outpatient clinic workflow tool.
 Read the clinician's clinic note and record the post-consultation ACTION PLAN the clinician has
@@ -67,20 +69,22 @@ def _extract_with_claude(note: str) -> ActionPlan:
     import anthropic  # imported lazily so mock mode has no hard dependency at runtime
 
     client = anthropic.Anthropic()
-    tool = {
-        "name": "record_action_plan",
-        "description": "Record the structured action plan extracted from the clinic note.",
-        "input_schema": ActionPlan.model_json_schema(),
-    }
+    # Structured outputs: the API constrains the reply to the ActionPlan JSON schema. (Forced tool
+    # use, the previous mechanism, is rejected with a 400 by claude-sonnet-5-5 and later models.)
     response = client.messages.create(
         model=MODEL,
-        max_tokens=2000,
+        max_tokens=MAX_TOKENS,
         system=SYSTEM_PROMPT,
-        tools=[tool],
-        tool_choice={"type": "tool", "name": "record_action_plan"},
         messages=[{"role": "user", "content": f"<clinic_note>\n{note}\n</clinic_note>"}],
+        output_config={"format": {"type": "json_schema", "schema": anthropic.transform_schema(ActionPlan)}},
     )
-    for block in response.content:
-        if block.type == "tool_use" and block.name == "record_action_plan":
-            return ActionPlan.model_validate(block.input)
-    raise ExtractionUnavailable("Model did not return a structured action plan")
+    # Check why the model stopped before trusting the text: a refusal or a truncated reply is not
+    # guaranteed to match the schema.
+    if response.stop_reason == "refusal":
+        raise ExtractionUnavailable("The model declined to extract a plan from this note")
+    if response.stop_reason == "max_tokens":
+        raise ExtractionUnavailable("The model ran out of output tokens before finishing the plan")
+    text = next((b.text for b in response.content if b.type == "text"), None)
+    if not text:
+        raise ExtractionUnavailable("Model did not return a structured action plan")
+    return ActionPlan.model_validate_json(text)

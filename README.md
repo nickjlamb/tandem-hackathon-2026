@@ -236,9 +236,11 @@ Results at **http://localhost:8000/eval** and in `eval/results-{offline,live}.js
 | Offline (rules + gate + tracker + escalation) | 17 / 17 | 5 / 5 | **0** |
 | Live extraction (claude-sonnet-4-5), 5 Sep, original 15 cases | 11 / 15 | 3 / 5 | **0** |
 | Live extraction, 7 Sep, 17 cases, before fixes | 15 / 17 | 4 / 5 | **0** |
-| **Live extraction, 7 Sep, 17 cases, current** | **17 / 17** | **5 / 5** | **0** |
+| Live extraction (claude-sonnet-4-5), 7 Sep, 17 cases, after fixes | 17 / 17 | 5 / 5 | **0** |
+| Live extraction (claude-sonnet-5-5), 23 Nov, 17 cases, before the G14 note fix | 16 / 17 | 5 / 5 | **0** |
+| **Live extraction (claude-sonnet-5-5), 23 Nov, 17 cases, current** | **17 / 17** | **5 / 5** | **0** |
 
-Every live failure taught us something, and the history is kept in `eval/results-live-*.json`. Of the first run's four failures, three were errors in our own test cases and one was a genuine gap in the extraction spec (a note saying "no follow-up needed" came back as a follow-up with no interval). The 7 Sep run confirmed that gap, plus one more mis-specified case; both were fixed — one sentence in the prompt, one word in a note — and the re-run passed. The property that matters held in every run: **nothing that should stop for a clinician was auto-actioned.**
+Every live failure taught us something, and the history is kept in `eval/results-live-*.json`. Of the first run's four failures, three were errors in our own test cases and one was a genuine gap in the extraction spec (a note saying "no follow-up needed" came back as a follow-up with no interval). The 7 Sep run confirmed that gap, plus one more mis-specified case; both were fixed — one sentence in the prompt, one word in a note — and the re-run passed. On 23 Nov the extraction model moved to claude-sonnet-5-5 (claude-sonnet-4-5 was being retired) and the first run failed G14: its note named "Mr Hollis" without saying he is a consultant, the new model left the reviewer role empty as the prompt instructs, and the rules fell back to the note's author. G14 tests a scan put on hold, not role inference, so the note now says "(consultant)" and the re-run passed. The property that matters held in every run: **nothing that should stop for a clinician was auto-actioned.**
 
 ## Safety and data
 

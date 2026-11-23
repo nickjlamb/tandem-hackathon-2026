@@ -1,9 +1,9 @@
 {
   "summary": {
     "mode": "claude",
-    "model": "claude-sonnet-4-5",
-    "run_at": "2026-09-07",
-    "seconds": 70.7,
+    "model": "claude-sonnet-5-5",
+    "run_at": "2026-11-23",
+    "seconds": 45.9,
     "total": 17,
     "passed": 17,
     "failed": 0,
